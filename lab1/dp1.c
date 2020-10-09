@@ -27,7 +27,8 @@ int main(int argc, char** argv) {
     float* pB = (float*) malloc(SIZE*sizeof(float));
 
     // initialize
-    for (long i = 0; i < SIZE; i++) {
+    long i;
+    for (i = 0; i < SIZE; i++) {
         pA[i] = 1.0f;
         pB[i] = 1.0f;
     }
@@ -35,7 +36,6 @@ int main(int argc, char** argv) {
     long total_nanosecond = 0;
     long total_second = 0;
     float ans = 0;
-    long i;
     for (i = 0; i < MEASUREMENT; i++) {
         // lets rock
         struct timespec tik, tok;
