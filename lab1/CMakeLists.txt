@@ -5,3 +5,4 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_executable(lab1 main.cpp)
 add_executable(dp1 dp1.c)
+add_executable(dp2 dp2.c)
