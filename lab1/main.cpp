@@ -1,5 +1,9 @@
 #include <iostream>
 #include <mkl_cblas.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 float dpunroll(long N, float *pA, float *pB) {
     float R = 0.0;
