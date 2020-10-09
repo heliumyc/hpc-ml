@@ -10,13 +10,14 @@
 #SBATCH --output=lab1.out
 #SBATCH --partition=c01_17
 
-
-
+echo "dp1:\n"
 ./dp1 1000000 1000
 ./dp1 300000000 20
 
+echo "dp2:\n"
 ./dp2 1000000 1000
 ./dp2 300000000 20
 
+echo "dp3:\n"
 ./dp3 1000000 1000
 ./dp3 300000000 20
