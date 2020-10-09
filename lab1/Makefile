@@ -29,5 +29,5 @@ test:
 
 clean:
 	rm -f *.o;
-	rm -f dp1 dp2;
+	rm -f dp1 dp2 dp3;
 
