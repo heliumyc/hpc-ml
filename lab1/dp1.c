@@ -1,11 +1,16 @@
-
+/**
+ *
+ * USING FLOAT PRECISION WHEN N IS LARGE WOULD CAUSE SERIOUS ERROR
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 long SIZE, MEASUREMENT;
 
-float dp(long N, const float *pA, const float *pB) {
+float dp(long N, float *pA, float *pB) {
     float R = 0.0F;
     int j;
     for (j=0;j<N;j++)
@@ -15,8 +20,8 @@ float dp(long N, const float *pA, const float *pB) {
 
 int main(int argc, char** argv) {
     if (argc == 3) {
-        SIZE = (long) strtol(argv[1], NULL, 10);
-        MEASUREMENT = (long) strtol(argv[2], NULL, 10);
+        SIZE = strtol(argv[1], NULL, 10);
+        MEASUREMENT = strtol(argv[2], NULL, 10);
     } else {
         printf("usage: ./program <size> <measurements>\n");
         exit(0);
@@ -33,22 +38,26 @@ int main(int argc, char** argv) {
         pB[i] = 1.0f;
     }
 
-    long total_nanosecond = 0;
-    long total_second = 0;
-    float ans = 0;
+    double time_taken = 0;
     for (i = 0; i < MEASUREMENT; i++) {
         // lets rock
-        struct timespec tik, tok;
-        clock_gettime(CLOCK_MONOTONIC, &tik);
+        struct timespec start, end;
+        clock_gettime(CLOCK_MONOTONIC, &start);
         float r = dp(SIZE, pA, pB); // return value is unused
-        clock_gettime(CLOCK_MONOTONIC, &tok);
-        total_second += tok.tv_sec - tik.tv_sec;
-        total_nanosecond += tok.tv_nsec - tik.tv_nsec;
-        ans += r;
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        time_taken += (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
+
+//        if (fabsf((float) SIZE - r)/(float)SIZE > 1e-6) {
+//            printf("error of calculation: suppose: %f, found: %f\n", (float) SIZE, r);
+//            exit(0);
+//        }
+        // simple make sure dp function call is not optimized by gcc
+        if (r < 0) {
+            printf("error of calculation: suppose: %f, found: %f\n", (float) SIZE, r);
+            exit(0);
+        }
     }
-    printf("%ld, %ld\n", total_second, total_nanosecond);
-    double total_time = (double) total_second + (double) total_nanosecond / 1e9;
-    double avg_time = total_time / (double) MEASUREMENT;
+    double avg_time = time_taken / (double) MEASUREMENT;
 
     // output data
     double bandwidth = 2.0*(double) SIZE * sizeof(float) / avg_time / 1e9;
