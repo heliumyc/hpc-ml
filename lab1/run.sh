@@ -10,25 +10,25 @@
 #SBATCH --output=lab1.out
 #SBATCH --partition=c01_17
 
-echo "dp1:\n"
+echo "dp1:"
 ./dp1 1000000 1000
 ./dp1 300000000 20
 
-echo "dp2:\n"
+echo "dp2:"
 ./dp2 1000000 1000
 ./dp2 300000000 20
 
-echo "dp3:\n"
+echo "dp3:"
 ./dp3 1000000 1000
 ./dp3 300000000 20
 
 module purge
 module load numpy/python3.6/intel/1.14.0
 
-echo "dp4:\n"
-python3 dp4 1000000 1000
-python3 dp4 300000000 20
+echo "dp4:"
+python3 dp4.py 1000000 1000
+python3 dp4.py 300000000 20
 
-echo "dp5:\n"
-python3 dp5 1000000 1000
-python3 dp5 300000000 20
+echo "dp5:"
+python3 dp5.py 1000000 1000
+python3 dp5.py 300000000 20
