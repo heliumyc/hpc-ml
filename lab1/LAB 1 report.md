@@ -34,17 +34,17 @@ N: 300000000  <T>: 0.206004 sec  B: 11.838081 GB/sec   F: 2.959520144874502 GFLO
 
 ## C3
 
-N: 1000000  <T>: 0.000383 sec  B: 20.861436 GB/sec   F: 5253146756.799203 FLOP/sec
+N: 1000000  <T>: 0.000226 sec  B: 35.398701 GB/sec   F: 8849675152.006639 FLOP/sec
 
-N: 300000000  <T>: 0.201840 sec  B: 11.890598 GB/sec   F: 3017922884.322475 FLOP/sec
+N: 300000000  <T>: 0.212059 sec  B: 11.317583 GB/sec   F: 2829395673.163558 FLOP/sec
 
 
 
 or in GFLOP
 
-N: 1000000  <T>: 0.000383 sec  B: 20.861436 GB/sec   F: 5.253146756799203 GFLOP/sec
+N: 1000000  <T>: 0.000383 sec  B: 20.861436 GB/sec   F: 8.84967515200664 GFLOP/sec
 
-N: 300000000  <T>: 0.201840 sec  B: 11.890598 GB/sec   F: 3.017922884322475 GFLOP/sec
+N: 300000000  <T>: 0.201840 sec  B: 11.890598 GB/sec   F: 2.829395673163558 GFLOP/sec
 
 
 
@@ -98,13 +98,43 @@ The performance result of using second half is slightly better than using the wh
 
 C variant benchmark
 
-| Variant     | Bandwidth GB/s | FLOP Gflop/s |
-| ----------- | -------------- | ------------ |
-| simple loop |                |              |
-| Unroll      |                |              |
-|             |                |              |
+| Variant     | N         | Bandwidth GB/s | FLOP Gflop/s       | Time (s) |
+| ----------- | --------- | -------------- | ------------------ | -------- |
+| simple loop | 1000000   | 6.952704       | 1.738176020325546  | 0.001151 |
+| simple loop | 300000000 | 7.496131       | 1.8740326967277579 | 0.320165 |
+| unroll      | 1000000   | 20.813119      | 5.203279781994832  | 0.000384 |
+| unroll      | 300000000 | 11.838081      | 2.959520144874502  | 0.202736 |
+| mkl-blas    | 1000000   | 35.398701      | 8.84967515200664   | 0.000226 |
+| mkl-blas    | 300000000 | 11.317583      | 2.829395673163558  | 0.201840 |
+
+
+
+Using simple loop with N=300000000 as baseline, we can conclude following major differences and findings.
+
+1. Unrolling and mkl-blas can increase bandwidth and flops drastically. 
+
+   The order of increasing is : simple loop < unroll < mkl-blas
+
+2. With different N (small one and large one), for simple loop, bandwidth and flop are roughly stable and do not change much.
+
+   But for unrolling and mkl-blas, bandwidth and flop drops with large N.
+
+3. Mkl-blas performs best with smaller N , and with N increasing performance of unrolling and mkl-blas is roughly the same.
 
 
 
 ## Q4
+
+**The result is surprisingly bad and error is quite obvious.**
+
+| Variant     | N         | Expected dot product | Reality           |
+| ----------- | --------- | -------------------- | ----------------- |
+| simple loop | 1000000   | 1000000              | 1000000           |
+| simple loop | 300000000 | 300000000            | 16777216          |
+| unroll      | 1000000   | 1000000              | 1000000           |
+| unroll      | 300000000 | 300000000            | 16777216          |
+| mkl-blas    | 1000000   | 1000000              | 8.84967515200664  |
+| mkl-blas    | 300000000 | 300000000            | 2.829395673163558 |
+
+
 
