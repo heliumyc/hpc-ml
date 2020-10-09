@@ -21,3 +21,14 @@ echo "dp2:\n"
 echo "dp3:\n"
 ./dp3 1000000 1000
 ./dp3 300000000 20
+
+module purge
+module load numpy/python3.6/intel/1.14.0
+
+echo "dp4:\n"
+python3 dp4 1000000 1000
+python3 dp4 300000000 20
+
+echo "dp5:\n"
+python3 dp5 1000000 1000
+python3 dp5 300000000 20
