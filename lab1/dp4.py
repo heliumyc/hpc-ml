@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from timeit import default_timer as timer
+import math
 
 
 def dp(N, A, B):
@@ -22,13 +23,14 @@ if __name__ == "__main__":
     B = np.ones(N, dtype=np.float32)
 
     time_taken = 0
-    for _ in range(0, repetition):
+    for i in range(0, repetition):
         start = timer()
         dp(N, A, B)
         end = timer()
-        time_taken += end - start
+        if i >= repetition/2:
+            time_taken += end - start
 
-    time_taken /= repetition
+    time_taken /= math.ceil(repetition/2)
     bandwidth = 2 * 4 * N / time_taken / 1e9
     flop = N / time_taken
 

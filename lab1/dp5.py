@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from timeit import default_timer as timer
+import math
 
 
 if __name__ == "__main__":
@@ -16,13 +17,12 @@ if __name__ == "__main__":
 
     time_taken = 0
     for i in range(0, repetition):
-        print(i)
         start = timer()
         np.dot(A, B)
         end = timer()
         time_taken += end - start
 
-    time_taken /= repetition
+    time_taken /= math.ceil(repetition/2)
     bandwidth = 2 * 4 * N / time_taken / 1e9
     flop = N / time_taken
 

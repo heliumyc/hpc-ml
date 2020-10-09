@@ -44,8 +44,10 @@ int main(int argc, char** argv) {
         clock_gettime(CLOCK_MONOTONIC, &start);
         float r = dpunroll(SIZE, pA, pB); // return value is unused
         clock_gettime(CLOCK_MONOTONIC, &end);
-        time_taken += (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
 
+        if (i >= MEASUREMENT/2) {
+            time_taken += (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
+        }
 //        if (fabsf((float) SIZE - r)/(float)SIZE > 1e-6) {
 //            printf("error of calculation: suppose: %f, found: %f\n", (float) SIZE, r);
 //            exit(0);
@@ -56,8 +58,8 @@ int main(int argc, char** argv) {
             exit(0);
         }
     }
-    double avg_time = time_taken / (double) MEASUREMENT;
-
+    long count = MEASUREMENT % 2 ? MEASUREMENT/2 : MEASUREMENT/2+1;
+    double avg_time = time_taken / (double) count;
     // output data
     double bandwidth = 2.0*(double) SIZE * sizeof(float) / avg_time / 1e9;
     double flop = 1.0*(double) SIZE / avg_time;
