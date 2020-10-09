@@ -64,4 +64,5 @@ int main(int argc, char** argv) {
     double flop = 1.0*(double) SIZE / avg_time;
     printf("N: %ld  <T>: %f sec  B: %f GB/sec   F: %f FLOP/sec\n", SIZE, avg_time, bandwidth, flop);
 
+    return 0;
 }
