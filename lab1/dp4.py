@@ -32,6 +32,6 @@ if __name__ == "__main__":
 
     time_taken /= math.ceil(repetition/2)
     bandwidth = 2 * 4 * N / time_taken / 1e9
-    flop = N / time_taken
+    flop = 2 * N / time_taken
 
     print("N: %d  <T>: %f sec  B: %f GB/sec   F: %f FLOP/sec" % (N, time_taken, bandwidth, flop))

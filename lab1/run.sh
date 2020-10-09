@@ -19,10 +19,11 @@ echo "dp2:"
 ./dp2 300000000 20
 
 echo "dp3:"
+module purge
+module load intel/19.1.1
 ./dp3 1000000 1000
 ./dp3 300000000 20
 
-module purge
 module load numpy/python3.6/intel/1.14.0
 
 echo "dp4:"

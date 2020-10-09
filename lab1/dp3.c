@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     double avg_time = time_taken / (double) count;
     // output data
     double bandwidth = 2.0*(double) SIZE * sizeof(float) / avg_time / 1e9;
-    double flop = 1.0*(double) SIZE / avg_time;
+    double flop = 2.0*(double) SIZE / avg_time;
     printf("N: %ld  <T>: %f sec  B: %f GB/sec   F: %f FLOP/sec\n", SIZE, avg_time, bandwidth, flop);
 
     return 0;
