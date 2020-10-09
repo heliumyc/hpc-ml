@@ -8,7 +8,7 @@ REP2:=20
 
 .PHONY: all
 
-all: dp1 dp2;
+all: dp1 dp2 dp3;
 
 dp1:
 	$(CC) $(CFLAGS) -o dp1 dp1.c;
