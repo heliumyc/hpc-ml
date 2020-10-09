@@ -10,8 +10,15 @@
 #SBATCH --output=lab1.out
 #SBATCH --partition=c01_17
 
+module purge
+module load openmpi/gnu/4.0.2
+
 ./dp1 1000000 1000
 ./dp1 300000000 20
 
 ./dp2 1000000 1000
 ./dp2 300000000 20
+
+module load
+./dp3 1000000 1000
+./dp3 300000000 20
