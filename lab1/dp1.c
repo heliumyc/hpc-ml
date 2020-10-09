@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
     long total_nanosecond = 0;
     long total_second = 0;
     float ans = 0;
-    for (long i = 0; i < MEASUREMENT; i++) {
+    long i;
+    for (i = 0; i < MEASUREMENT; i++) {
         // lets rock
         struct timespec tik, tok;
         clock_gettime(CLOCK_MONOTONIC, &tik);
