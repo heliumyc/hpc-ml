@@ -8,7 +8,7 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=cy1505@nyu.edu
 #SBATCH --output=lab2.out
-#SBATCH --partition=c39_01
+#SBATCH --partition=c42_01
 
 module purge
 module load python3/intel/3.7.3
