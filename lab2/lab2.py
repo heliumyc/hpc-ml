@@ -91,7 +91,7 @@ def main():
     device = 'cuda' if args.gpu and torch.cuda.is_available() else 'cpu'
     data_path = args.data
     workers_num = args.workers
-    epoch = args.epoch
+    max_epoch = args.epoch
     disable_batch_norm = args.disable_batch_norm
     lr = args.lr
 
@@ -200,7 +200,7 @@ def main():
     total_data_load_time = 0
     total_train_time = 0
     total_epoch_time = 0
-    for epoch in range(start_epoch, start_epoch+200):
+    for epoch in range(0, max_epoch):
 
         total_tic = time.perf_counter()
         train_data_load_time, train_time = train(epoch)
