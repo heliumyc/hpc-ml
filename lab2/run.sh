@@ -8,11 +8,11 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=cy1505@nyu.edu
 #SBATCH --output=lab2.out
-#SBATCH --partition=c01_17
+#SBATCH --partition=c39_01
 
 module purge
-module load numpy/python3.6/intel/1.14.0
-pip3 install torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+module load python3/intel/3.7.3
+pip3 install --user torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 echo "c2:\n"
 python3 lab2.py --epoch 5
