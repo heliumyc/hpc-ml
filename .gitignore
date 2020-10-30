@@ -9,3 +9,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 */cmake-build-*
+*/data-cifar-10
+*/.DS_Store
+*/data
+.DS_Store
