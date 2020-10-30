@@ -7,7 +7,7 @@
 #SBATCH --job-name=hml-lab1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=cy1505@nyu.edu
-#SBATCH --output=gpu.out
+#SBATCH --output=gpu5.out
 #SBATCH --gres=gpu:1
 
 module purge
