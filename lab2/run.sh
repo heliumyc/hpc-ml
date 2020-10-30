@@ -11,7 +11,7 @@
 #SBATCH --partition=c01_17
 
 module purge
-module load numpy/python3.6
+module load numpy/python3.6/intel/1.14.0
 module load pytorch/python3.6/0.3.0_4
 module load torchvision/0.1.8
 
