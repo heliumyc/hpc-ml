@@ -14,6 +14,7 @@ module purge
 module load numpy/python3.6/intel/1.14.0
 module load pytorch/python3.6/0.3.0_4
 module load torchvision/python3.5/0.1.9
+module load torch/gnu/20171213
 
 echo "c2:\n"
 python3 lab2.py --epoch 5
