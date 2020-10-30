@@ -7,8 +7,8 @@
 #SBATCH --job-name=hml-lab1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=cy1505@nyu.edu
-#SBATCH --output=lab2.out
-#SBATCH --partition=c01_17
+#SBATCH --output=c2.out
+#SBATCH --partition=c01_14
 
 module purge
 module load python3/intel/3.7.3
