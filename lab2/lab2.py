@@ -206,7 +206,7 @@ def main():
         train_data_load_time, train_time = train(epoch)
         test_data_load_time = test(epoch)
         data_load_time = train_data_load_time + test_data_load_time
-        epoch_time = time.perf_counter - total_tic
+        epoch_time = time.perf_counter() - total_tic
 
         print('Data-loading time: %.3f | Training time: %.3f | Epoch running time: %.3f' %(data_load_time, train_time, epoch_time))
 

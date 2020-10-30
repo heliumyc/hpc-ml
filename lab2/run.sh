@@ -10,7 +10,10 @@
 #SBATCH --output=lab2.out
 #SBATCH --partition=c01_17
 
+module purge
 module load numpy/python3.6
+module load pytorch/python3.6/0.3.0_4
+module load torchvision/0.1.8
 
 echo "c2:\n"
 python3 lab2.py --epoch 5
