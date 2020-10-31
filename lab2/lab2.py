@@ -73,8 +73,7 @@ class ResNet(nn.Module):
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        return out
-
+        return out    
 
 def main():
 
@@ -156,8 +155,8 @@ def main():
 
             tic = time.perf_counter()
             optimizer.zero_grad()
-            outputs = net(inputs)
             data_load_time += time.perf_counter() - tic
+            outputs = net(inputs)
 
             loss = criterion(outputs, targets)
             loss.backward()
@@ -183,8 +182,8 @@ def main():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 tic = time.perf_counter()
                 inputs, targets = inputs.to(device), targets.to(device)
-                outputs = net(inputs)
                 data_load_time += time.perf_counter() - tic
+                outputs = net(inputs)
 
                 loss = criterion(outputs, targets)
                 test_loss += loss.item()
@@ -216,5 +215,9 @@ def main():
 
     
     print('Total-Data-loading time: %.3f | Total-Training time: %.3f | Total-Epoch running time: %.3f' %(total_data_load_time, total_train_time, total_epoch_time))
+
+    ## calculate parameters
+    pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
+    print('Trainable parameters: %s' %(pytorch_total_params))
 if __name__ == "__main__":
     main()

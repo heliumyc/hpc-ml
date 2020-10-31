@@ -68,33 +68,21 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 
 ## C3.1
 
-| Workers | Data-loading | Training | Total Epoch |
-| ------- | ------------ | -------- | ----------- |
-| 0       | 1.196        | 22.739   | 143.366     |
-| 4       | 7.693        | 45.074   | 137.602     |
-| 8       |              |          |             |
-| 12      |              |          |             |
-| 16      |              |          |             |
+| Workers | Total Epoch |
+| ------- | ----------- |
+| 0       | 143.366     |
+| 4       | 137.602     |
+| 8       | 208.351     |
+| 12      | 206.772     |
+| 16      | 210.551     |
 
 ## C3.2
 
-4 workers is the best
+4 workers is the best, 
 
 
 
 # C4
-
-**Data-loading**
-
-| Epoch | workers=1 | workers=4 |
-| ----- | --------- | --------- |
-| 0     | 8.160     |           |
-| 1     | 7.674     |           |
-| 2     | 7.624     |           |
-| 3     | 7.657     |           |
-| 4     | 7.693     |           |
-| Total | 38.808    |           |
-| Avg.  | 7.7616    |           |
 
 **Computing** (Total run time)
 
@@ -108,7 +96,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 | Total | 197.628   | 137.602   |
 | Avg.  | 39.5256   | 27.5204   |
 
-
+I guess the reason is that though more workers can load data in parallel, too many worker might cost too much resources on scheduling or something else.
 
 # C5
 
@@ -159,9 +147,38 @@ The result is not quite stable, because the accuracy is always different. Someti
 
 # Q1
 
+If we ignore the 1$$\times$$1 conv layer:
+
+Then: 1 + 4$$\times$$2 $$\times$$2 = 17
+
+
+
 # Q2
+
+512
+
+
 
 # Q3
 
+```python
+pytorch_trainable_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
+print('Trainable parameters: %s' %(pytorch_trainable_total_params))
+```
+
+Trainable parameters: 11173962
+
+Gradients: 11173962
+
+They two are identical in SGD.
+
+But we can also calculate it based on ResNet-18 model structure.
+
+
+
 # Q4
+
+The parameters remains the same: 11173962
+
+And I presume "gradients" in the question means how many times we use gradients in one step. If so, my anwser would be three times of params because Adam needs previous gradients (momentum $$v_{t-1}$$ actually ) and current gradient ($$g_t$$) and element-wise square $$g_t \bigodot g_t$$. Thus 3$$\times$$ parameters.
 
