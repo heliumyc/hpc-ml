@@ -153,11 +153,12 @@ def main():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             tic = time.perf_counter()
             inputs, targets = inputs.to(device), targets.to(device)
-            data_load_time += time.perf_counter() - tic
 
             tic = time.perf_counter()
             optimizer.zero_grad()
             outputs = net(inputs)
+            data_load_time += time.perf_counter() - tic
+
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
@@ -182,11 +183,10 @@ def main():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 tic = time.perf_counter()
                 inputs, targets = inputs.to(device), targets.to(device)
+                outputs = net(inputs)
                 data_load_time += time.perf_counter() - tic
 
-                outputs = net(inputs)
                 loss = criterion(outputs, targets)
-
                 test_loss += loss.item()
                 _, predicted = outputs.max(1)
                 total += targets.size(0)
