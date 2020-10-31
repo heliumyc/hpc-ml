@@ -16,8 +16,9 @@ import time
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(self, in_planes, planes, stride=1, use_bn=True):
         super(BasicBlock, self).__init__()
+        self.use_bn = use_bn
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -34,16 +35,17 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        out = F.relu(self.bn1(self.conv1(x))) if self.use_bn else F.relu(self.conv1(x))
+        out = self.bn2(self.conv2(out)) if self.use_bn else self.conv2(out)
         out += self.shortcut(x)
         out = F.relu(out)
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes=10, use_bn=True):
         super(ResNet, self).__init__()
         self.in_planes = 64
+        self.use_bn = use_bn
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
                                stride=1, padding=1, bias=False)
@@ -58,12 +60,12 @@ class ResNet(nn.Module):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
+            layers.append(block(self.in_planes, planes, stride, self.use_bn))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn1(self.conv1(x))) if self.use_bn else F.relu(self.conv1(x))
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -117,7 +119,7 @@ def main():
 
 
     # net model
-    net = ResNet(BasicBlock, [2, 2, 2, 2]) # res18
+    net = ResNet(BasicBlock, [2, 2, 2, 2], use_bn=(not args.disable_batch_norm)) # res18
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
@@ -165,7 +167,7 @@ def main():
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-            # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
         return data_load_time, train_time
 
@@ -190,7 +192,7 @@ def main():
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
                 
-                # print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
         return data_load_time
 
