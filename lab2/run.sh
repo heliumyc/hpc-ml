@@ -7,7 +7,7 @@
 #SBATCH --job-name=hml-lab1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=cy1505@nyu.edu
-#SBATCH --output=gpu5.out
+#SBATCH --output=sgd-no-bn.out
 #SBATCH --gres=gpu:1
 
 module purge
@@ -15,7 +15,7 @@ module load python3/intel/3.7.3
 pip3 install --user torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 echo "c2:\n"
-python3 lab2.py --epoch 5 --gpu --workers 4
+python3 lab2.py --epoch 5 --gpu --workers 4 --disable_batch_norm
 
 # echo "\n ======================== \n"
 # echo "c3:\n"
