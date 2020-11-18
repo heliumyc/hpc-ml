@@ -100,6 +100,9 @@ double calc_checksum(double *tensor, int layer, int height, int width) {
     return sum;
 }
 
+
+
+
 int main() {
 
     // init input and filter data
@@ -127,9 +130,9 @@ int main() {
     const int in_h = 4;
     const int in_w = 4;
 
-    cudnnTensorDescriptor_t in_desc;
-    CUDNN_CALL(cudnnCreateTensorDescriptor(&in_desc));
-    CUDNN_CALL(cudnnSetTensor4dDescriptor(in_desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, in_n, in_c, in_h, in_w));
+    cudnnTensorDescriptor_t input_descriptor;
+    CUDNN_CALL(cudnnCreateTensorDescriptor(&input_descriptor));
+    CUDNN_CALL(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, in_n, in_c, in_h, in_w));
 
     double *in_data;
     CUDA_CALL(cudaMalloc(
@@ -153,8 +156,7 @@ int main() {
             filter_k, filter_c, filter_h, filter_w));
 
     double *filter_data;
-    CUDA_CALL(cudaMalloc(
-            &filter_data, filter_k * filter_c * filter_h * filter_w * sizeof(double)));
+    CUDA_CALL(cudaMalloc(&filter_data, filter_k * filter_c * filter_h * filter_w * sizeof(double)));
 
     // convolution
     const int pad_h = 1;
@@ -175,7 +177,7 @@ int main() {
     int out_h;
     int out_w;
 
-    CUDNN_CALL(cudnnGetConvolution2dForwardOutputDim(conv_desc, in_desc, filter_desc, &out_n, &out_c, &out_h, &out_w));
+    CUDNN_CALL(cudnnGetConvolution2dForwardOutputDim(conv_desc, input_descriptor, filter_desc, &out_n, &out_c, &out_h, &out_w));
 
     std::cout << "out_n: " << out_n << std::endl;
     std::cout << "out_c: " << out_c << std::endl;
@@ -192,11 +194,11 @@ int main() {
 
     // algorithm
     cudnnConvolutionFwdAlgo_t algo;
-    CUDNN_CALL(cudnnGetConvolutionForwardAlgorithm(cudnn, in_desc, filter_desc, conv_desc, out_desc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo));
+    CUDNN_CALL(cudnnGetConvolutionForwardAlgorithm(cudnn, input_descriptor, filter_desc, conv_desc, out_desc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo));
 
     // workspace
     size_t ws_size;
-    CUDNN_CALL(cudnnGetConvolutionForwardWorkspaceSize(cudnn, in_desc, filter_desc, conv_desc, out_desc, algo, &ws_size));
+    CUDNN_CALL(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, filter_desc, conv_desc, out_desc, algo, &ws_size));
 
     double *ws_data;
     CUDA_CALL(cudaMalloc(&ws_data, ws_size));
@@ -208,7 +210,7 @@ int main() {
     double alpha = 1. , beta = 0.;
     dev_iota<<<in_w * in_h, in_n * in_c>>>(in_data);
     dev_const<<<filter_w * filter_h, filter_k * filter_c>>>(filter_data, 1.f);
-    CUDNN_CALL(cudnnConvolutionForward(cudnn, &alpha, in_desc, in_data, filter_desc, filter_data,
+    CUDNN_CALL(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, in_data, filter_desc, filter_data,
             conv_desc, algo, ws_data, ws_size, &beta, out_desc, out_data));
 
     // finalizing
@@ -219,7 +221,7 @@ int main() {
     CUDA_CALL(cudaFree(filter_data));
     CUDNN_CALL(cudnnDestroyFilterDescriptor(filter_desc));
     CUDA_CALL(cudaFree(in_data));
-    CUDNN_CALL(cudnnDestroyTensorDescriptor(in_desc));
+    CUDNN_CALL(cudnnDestroyTensorDescriptor(input_descriptor));
     CUDNN_CALL(cudnnDestroy(cudnn));
     return 0;
 }
