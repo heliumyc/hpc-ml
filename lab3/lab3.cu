@@ -23,25 +23,29 @@
 }
 
 //const int H = 1024, W = 1024;
-constexpr int H = 4, W = 4;
-constexpr int C = 3, FW = 3, FH = 3, K = 3;
-constexpr int P = 1;
-constexpr int H0 = H + 2 * P;
-constexpr int W0 = W + 2 * P;
-constexpr int INPUT_SIZE = C * H * W;
-constexpr int FILTER_SIZE = C * K * FW * FH;
-constexpr int OUTPUT_SIZE = K * H * W;
-constexpr int INPUT_PADDED_SIZE = C * H0 * W0;
+const int H = 4, W = 4;
+const int C = 3, FW = 3, FH = 3, K = 3;
+const int P = 1;
+const int H0 = H + 2 * P;
+const int W0 = W + 2 * P;
+const int INPUT_SIZE = C * H * W;
+const int FILTER_SIZE = C * K * FW * FH;
+const int OUTPUT_SIZE = K * H * W;
+const int INPUT_PADDED_SIZE = C * H0 * W0;
 
-//template<class T>
-//T &at(T *tensor, int c, int i, int j, int height, int width) {
-//    return tensor[c * height * width + i * width + j];
-//}
-//
-//template<class T>
-//T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
-//    return tensor[k * layer * height * width + c * height * width + i * width + j];
-//}
+struct Configuration {
+    int K, C, H, W, P, H0, W0, FW, FH;
+};
+
+template<class T>
+T &at(T *tensor, int c, int i, int j, int height, int width) {
+    return tensor[c * height * width + i * width + j];
+}
+
+template<class T>
+T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
+    return tensor[k * layer * height * width + c * height * width + i * width + j];
+}
 
 __global__
 template<class T>
@@ -157,26 +161,34 @@ void naive_convolution(double *input, double *filter, double *output) {
 
 //////////////////////////////////////////////////////
 
-__global__ void naive_cuda_kernel(double *input, double *filter, double *output) {
+__global__ void naive_cuda_kernel(double *input, double *filter, double *output, const struct Configuration &configuration) {
     int x = threadIdx.x + blockDim.x * blockIdx.x;
     int y = threadIdx.y + blockDim.y * blockIdx.y;
     int k = threadIdx.z + blockDim.z * blockIdx.z;
     double sum = 0;
 
-    if (k < K && x < H0 && y < W0) {
-        for (int c = 0; c < C; c++) {
-            for (int j = 0; j < FH; j++) {
-                for (int i = 0; i < FW; i++) {
-                    sum += at(filter, k, c, FW - 1 - i, FH - 1 - j, C, FW, FH) *
-                           at(input, c, x + i, y + j, H0, W0);
+    int H0_d = configuration.H0;
+    int W0_d = configuration.W0;
+    int H_d = configuration.H;
+    int W_d = configuration.W;
+    int FH_d = configuration.FH;
+    int FW_d = configuration.FW;
+    int K_d = configuration.K;
+
+    if (k < K_d && x < H0_d && y < W0_d) {
+        for (int c = 0; c < C_d; c++) {
+            for (int j = 0; j < FH_d; j++) {
+                for (int i = 0; i < FW_d; i++) {
+                    sum += at(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
+                           at(input, c, x + i, y + j, H0_d, W0_d);
                 }
             }
         }
-        at(output, k, x, y, H, W) = sum;
+        at(output, k, x, y, H_d, W_d) = sum;
     }
 }
 
-void run_cuda(double *input, double *filter, double *output) {
+void run_naive_cuda(double *input, double *filter, double *output) {
     double *input_d, *filter_d, *output_d;
     CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)));
     CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)));
@@ -188,7 +200,7 @@ void run_cuda(double *input, double *filter, double *output) {
     int TILE_LEN = 512;
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(C, 3));
     dim3 block(TILE_LEN, TILE_LEN, 3);
-    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d);
+    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, {K, C, H, W, P, H0, W0, FW, FH});
     cudaDeviceSynchronize();
 
     // copy back
