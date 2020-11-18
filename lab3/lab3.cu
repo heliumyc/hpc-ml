@@ -197,7 +197,6 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
     }
-    cudaDeviceSynchronize();
 
     // copy back
     CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
