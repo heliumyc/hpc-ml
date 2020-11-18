@@ -127,6 +127,9 @@ double calc_checksum(double *tensor, int layer, int height, int width) {
 
 void run_cudnn(double *input, double *filter, double *output) {
 
+    cudnnHandle_t cudnn;
+    CUDNN_CALL(cudnnCreate(&cudnn));
+
     // define input descriptor
     cudnnTensorDescriptor_t input_descriptor;
     CUDNN_CALL(cudnnCreateTensorDescriptor(&input_descriptor));
@@ -151,7 +154,7 @@ void run_cudnn(double *input, double *filter, double *output) {
     CUDNN_CALL(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, 1, K, H, W));
     double *output_d;
     CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE* sizeof(double)));
-    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostTodDevice));
+    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
 
     // define conv pre action
     cudnnConvolutionDescriptor_t conv_descriptor;
