@@ -8,7 +8,7 @@
   cudaError_t err = (f); \
   if (err != cudaSuccess) { \
     std::cout \
-        << "    Error occurred: " << err << " " << msg << std::endl; \
+        << "    Error occurred: " << err << " for " << cudaGetErrorString(err) << " at:" << msg << std::endl; \
     std::exit(1); \
   } \
 }
