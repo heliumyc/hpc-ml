@@ -5,7 +5,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --mem=4GB
 #SBATCH --job-name=hml-lab3
-#SBATCH --output=sgd-no-bn.out
+#SBATCH --output=lab3.out
 #SBATCH --gres=gpu:1
 
 module purge
