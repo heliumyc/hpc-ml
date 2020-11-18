@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>
+#include <iomanip>
 #include <cuda.h>
 #include <cudnn.h>
 
