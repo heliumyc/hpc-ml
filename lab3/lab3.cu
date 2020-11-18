@@ -47,15 +47,15 @@ T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
-__device__
-inline double &at_d(double *tensor, int c, int i, int j, int height, int width) {
-    return tensor[c * height * width + i * width + j];
-}
-
-__device__
-inline double &at_d(double *tensor, int k, int c, int i, int j, int layer, int height, int width) {
-    return tensor[k * layer * height * width + c * height * width + i * width + j];
-}
+//__device__
+//inline double &at_d(double *tensor, int c, int i, int j, int height, int width) {
+//    return tensor[c * height * width + i * width + j];
+//}
+//
+//__device__
+//inline double &at_d(double *tensor, int k, int c, int i, int j, int layer, int height, int width) {
+//    return tensor[k * layer * height * width + c * height * width + i * width + j];
+//}
 
 inline int ceil(int a, int b) {
     return (a+b-1)/b;
@@ -167,15 +167,20 @@ __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
     double sum = 0;
 
     if (k < K_d && x < H_d && y < W_d) {
+        int output_idx = k*H_d*W_d + x*W_d + y;
         for (int c = 0; c < C_d; c++) {
             for (int j = 0; j < FH_d; j++) {
                 for (int i = 0; i < FW_d; i++) {
-                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
-                           at_d(input, c, x + i, y + j, H0_d, W0_d);
+                    int filter_idx = k*C_d*FH_d*FW_d + c*FH_d*FW_d + (FW_d-1-i)*FW_d + (FH_d-1-j);
+                    int input_idx = c*H0_d*W0_d + (x+i)*W0_d + (y+j);
+                    sum += filter[filter_idx] * input[input_idx];
+//                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
+//                           at_d(input, c, x + i, y + j, H0_d, W0_d);
                 }
             }
         }
-        at_d(output, k, x, y, H_d, W_d) = sum;
+        output[output_idx] = sum;
+//        at_d(output, k, x, y, H_d, W_d) = sum;
     }
 }
 
