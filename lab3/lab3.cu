@@ -23,21 +23,33 @@
 }
 
 //const int H = 1024, W = 1024;
-const int H = 4, W = 4;
-const int C = 3, FW = 3, FH = 3, K = 3;
-const int P = 1;
-const int H0 = H + 2 * P;
-const int W0 = W + 2 * P;
-const int INPUT_SIZE = C * H * W;
-const int FILTER_SIZE = C * K * FW * FH;
-const int OUTPUT_SIZE = K * H * W;
-const int INPUT_PADDED_SIZE = C * H0 * W0;
+constexpr int H = 4, W = 4;
+constexpr int C = 3, FW = 3, FH = 3, K = 3;
+constexpr int P = 1;
+constexpr int H0 = H + 2 * P;
+constexpr int W0 = W + 2 * P;
+constexpr int INPUT_SIZE = C * H * W;
+constexpr int FILTER_SIZE = C * K * FW * FH;
+constexpr int OUTPUT_SIZE = K * H * W;
+constexpr int INPUT_PADDED_SIZE = C * H0 * W0;
 
+//template<class T>
+//T &at(T *tensor, int c, int i, int j, int height, int width) {
+//    return tensor[c * height * width + i * width + j];
+//}
+//
+//template<class T>
+//T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
+//    return tensor[k * layer * height * width + c * height * width + i * width + j];
+//}
+
+__global__
 template<class T>
 T &at(T *tensor, int c, int i, int j, int height, int width) {
     return tensor[c * height * width + i * width + j];
 }
 
+__global__
 template<class T>
 T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
