@@ -215,10 +215,10 @@ __global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
 
 void run_naive_cuda(double *input, double *filter, double *output) {
     double *input_d, *filter_d, *output_d;
-    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)), "malloc input");
+    CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
     CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
     CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)), "malloc output");
-    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
+    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_PADDED_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
@@ -233,6 +233,12 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
     cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
     std::cout << checksum << std::endl;
+
+//    ////////////
+//    auto *temp = (double *) malloc(sizeof(double) * INPUT_SIZE);
+//    CUDA_CALL(cudaMemcpy(output, input_d, INPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
+//    ////////////
+
 
     // naive kernel
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
@@ -350,7 +356,7 @@ int main() {
 
     // cuda
     clear_output(output);
-    run_naive_cuda(input, filter, output);
+    run_naive_cuda(input_padded, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
     print_mat(output, K, H, W);
