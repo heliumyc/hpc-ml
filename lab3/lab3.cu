@@ -4,11 +4,11 @@
 #include <cuda.h>
 #include <cudnn.h>
 
-#define CUDA_CALL(f) { \
+#define CUDA_CALL(f, msg) { \
   cudaError_t err = (f); \
   if (err != cudaSuccess) { \
     std::cout \
-        << "    Error occurred: " << err << std::endl; \
+        << "    Error occurred: " << err << " " << msg << std::endl; \
     std::exit(1); \
   } \
 }
@@ -181,12 +181,12 @@ __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
 
 void run_naive_cuda(double *input, double *filter, double *output) {
     double *input_d, *filter_d, *output_d;
-    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)));
-    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)));
-    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)));
-    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
-    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice));
-    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)), "malloc input");
+    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
+    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)), "malloc output");
+    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
+    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
+    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
     int TILE_LEN = 8;
     int CHAN_LEN = 4;
@@ -200,12 +200,12 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     cudaDeviceSynchronize();
 
     // copy back
-    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy to host");
 
     // finalizing
-    CUDA_CALL(cudaFree(output_d));
-    CUDA_CALL(cudaFree(filter_d));
-    CUDA_CALL(cudaFree(input_d));
+    CUDA_CALL(cudaFree(output_d), "free");
+    CUDA_CALL(cudaFree(filter_d), "free");
+    CUDA_CALL(cudaFree(input_d), "free");
 
 }
 
@@ -222,24 +222,24 @@ void run_cudnn(double *input, double *filter, double *output) {
     CUDNN_CALL(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, 1, C, H, W));
     // copy data from host to device
     double *input_d;
-    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)));
-    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)), "malloc input");
+    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
 
     // define filter descriptor
     cudnnFilterDescriptor_t filter_descriptor;
     CUDNN_CALL(cudnnCreateFilterDescriptor(&filter_descriptor));
     CUDNN_CALL(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_DOUBLE, CUDNN_TENSOR_NCHW, K, C, FH, FW));
     double *filter_d;
-    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)));
-    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
+    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
 
     // define output descriptor
     cudnnTensorDescriptor_t output_descriptor;
     CUDNN_CALL(cudnnCreateTensorDescriptor(&output_descriptor));
     CUDNN_CALL(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, 1, K, H, W));
     double *output_d;
-    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE* sizeof(double)));
-    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE* sizeof(double)), "malloc output");
+    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
     // define conv pre action
     cudnnConvolutionDescriptor_t conv_descriptor;
@@ -256,7 +256,7 @@ void run_cudnn(double *input, double *filter, double *output) {
     size_t ws_size;
     CUDNN_CALL(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, filter_descriptor, conv_descriptor, output_descriptor, algorithm, &ws_size));
     double *ws_data;
-    CUDA_CALL(cudaMalloc(&ws_data, ws_size));
+    CUDA_CALL(cudaMalloc(&ws_data, ws_size), "malloc workspace");
 
 
     // perform conv !!!!!!!!1
@@ -265,13 +265,13 @@ void run_cudnn(double *input, double *filter, double *output) {
                                        conv_descriptor, algorithm, ws_data, ws_size, &beta, output_descriptor, output_d));
 
     // copy back
-    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
 
     // finalizing
-    CUDA_CALL(cudaFree(ws_data));
-    CUDA_CALL(cudaFree(output_d));
-    CUDA_CALL(cudaFree(filter_d));
-    CUDA_CALL(cudaFree(input_d));
+    CUDA_CALL(cudaFree(ws_data), "free");
+    CUDA_CALL(cudaFree(output_d), "free");
+    CUDA_CALL(cudaFree(filter_d), "free");
+    CUDA_CALL(cudaFree(input_d), "free");
 
     CUDNN_CALL(cudnnDestroyTensorDescriptor(output_descriptor));
     CUDNN_CALL(cudnnDestroyTensorDescriptor(input_descriptor));
