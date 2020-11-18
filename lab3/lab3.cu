@@ -47,19 +47,19 @@ T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
-__global__
+__device__
 template<class T>
-T &at(T *tensor, int c, int i, int j, int height, int width) {
+T &at_d(T *tensor, int c, int i, int j, int height, int width) {
     return tensor[c * height * width + i * width + j];
 }
 
-__global__
+__device__
 template<class T>
-T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
+T &at_d(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
-int ceil(int a, int b) {
+inline int ceil(int a, int b) {
     return (a+b-1)/b;
 }
 
@@ -179,12 +179,12 @@ __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
         for (int c = 0; c < C_d; c++) {
             for (int j = 0; j < FH_d; j++) {
                 for (int i = 0; i < FW_d; i++) {
-                    sum += at(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
-                           at(input, c, x + i, y + j, H0_d, W0_d);
+                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
+                           at_d(input, c, x + i, y + j, H0_d, W0_d);
                 }
             }
         }
-        at(output, k, x, y, H_d, W_d) = sum;
+        at_d(output, k, x, y, H_d, W_d) = sum;
     }
 }
 
