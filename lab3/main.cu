@@ -11,6 +11,15 @@
   } \
 }
 
+#define CUDNN_CALL(f) { \
+  cudnnStatus_t err = (f); \
+  if (err != CUDNN_STATUS_SUCCESS) { \
+    std::cout \
+        << "    Error occurred: " << err << std::endl; \
+    std::exit(1); \
+  } \
+}
+
 //const int H = 1024, W = 1024;
 const int H = 4, W = 4;
 const int C = 3, FW = 3, FH = 3, K = 64;
