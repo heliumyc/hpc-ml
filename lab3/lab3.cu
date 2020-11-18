@@ -192,7 +192,10 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     int CHAN_LEN = 16;
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
     dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
-    CUDA_CALL(naive_cuda_kernel<<< grid, block >>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FW, FH));
+    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FW, FH);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess)
+        printf("Error: %s\n", cudaGetErrorString(err));
     cudaDeviceSynchronize();
 
     // copy back
