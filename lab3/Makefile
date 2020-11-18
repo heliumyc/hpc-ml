@@ -1,4 +1,4 @@
-all: ./conv ./conv3
+all: ./lab3
 
 CUDADIR :=  /usr/local/cuda/
 CUDNNDIR := /usr/local/cuda
@@ -11,8 +11,10 @@ NVCC := nvcc
 CC := $(NVCC)
 
 %.o: %.cu
+	module load cuda/9.0.176; \
+	module load cudnn/9.0v7.0.5; \
 	$(NVCC) $(CPPFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
-	rm -f ./conv ./conv3
+	rm -f ./lab3
