@@ -238,7 +238,7 @@ int main() {
 
     // cuDNN
     clear_output(output);
-    print_mat(output, K, H, W);
+    print_mat(input, C, H, W);
     run_cudnn(input, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
