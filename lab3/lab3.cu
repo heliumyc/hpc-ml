@@ -191,7 +191,7 @@ void run_cudnn(double *input, double *filter, double *output) {
                                        conv_descriptor, algorithm, ws_data, ws_size, &beta, output_descriptor, output_d));
 
     // copy back
-    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE, cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost));
 
     // finalizing
     CUDA_CALL(cudaFree(ws_data));
