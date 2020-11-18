@@ -197,8 +197,9 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
 
     int TILE_LEN = 512;
-    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(C, 3));
-    dim3 block(TILE_LEN, TILE_LEN, 3);
+    int CHAN_LEN = 16;
+    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
+    dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, {K, C, H, W, P, H0, W0, FW, FH});
     cudaDeviceSynchronize();
 
