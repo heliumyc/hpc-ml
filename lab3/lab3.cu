@@ -174,6 +174,7 @@ __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
     int FH_d = configuration.FH;
     int FW_d = configuration.FW;
     int K_d = configuration.K;
+    int C_d = configuration.C;
 
     if (k < K_d && x < H0_d && y < W0_d) {
         for (int c = 0; c < C_d; c++) {
