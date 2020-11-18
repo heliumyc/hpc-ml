@@ -313,7 +313,7 @@ int main() {
 
     // cuda
     clear_output(output);
-    run_cuda(input, filter, output);
+    run_naive_cuda(input, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
 
