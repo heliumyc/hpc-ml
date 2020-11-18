@@ -4,9 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=5:00:00
 #SBATCH --mem=4GB
-#SBATCH --job-name=hml-lab1
-#SBATCH --mail-type=END
-#SBATCH --mail-user=cy1505@nyu.edu
+#SBATCH --job-name=hml-lab3
 #SBATCH --output=sgd-no-bn.out
 #SBATCH --gres=gpu:1
 
