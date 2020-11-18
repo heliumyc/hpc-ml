@@ -43,6 +43,11 @@ T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
+int ceil(int a, int b) {
+    return (a+b-1)/b;
+}
+
+//////////////////////////////////////////////////////////////////////
 void init_input(double *input) {
     // real input
     for (int c = 0; c < C; c++) {
@@ -104,6 +109,20 @@ void print_mat(double *mat, int channel, int height, int width) {
     std::cout << std::endl;
 }
 
+double calc_checksum(double *tensor, int layer, int height, int width) {
+    double sum = 0;
+    for (int c = 0; c < layer; c++) {
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                sum += at(tensor, c, i, j, height, width);
+            }
+        }
+    }
+    return sum;
+}
+
+
+//////////////////////////////////////////////////////////////////////
 void naive_convolution(double *input, double *filter, double *output) {
     for (int k = 0; k < K; k++) {
         for (int x = 0; x < H; x++) {
@@ -124,18 +143,53 @@ void naive_convolution(double *input, double *filter, double *output) {
     }
 }
 
-double calc_checksum(double *tensor, int layer, int height, int width) {
+//////////////////////////////////////////////////////
+
+__global__ void naive_cuda_kernel(double *input, double *filter, double *output) {
+    int x = threadIdx.x + blockDim.x * blockIdx.x;
+    int y = threadIdx.y + blockDim.y * blockIdx.y;
+    int k = threadIdx.z + blockDim.z * blockIdx.z;
     double sum = 0;
-    for (int c = 0; c < layer; c++) {
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                sum += at(tensor, c, i, j, height, width);
+
+    if (k < K && x < H0 && y < W0) {
+        for (int c = 0; c < C; c++) {
+            for (int j = 0; j < FH; j++) {
+                for (int i = 0; i < FW; i++) {
+                    sum += at(filter, k, c, FW - 1 - i, FH - 1 - j, C, FW, FH) *
+                           at(input, c, x + i, y + j, H0, W0);
+                }
             }
         }
+        at(output, k, x, y, H, W) = sum;
     }
-    return sum;
 }
 
+void run_cuda(double *input, double *filter, double *output) {
+    double *input_d, *filter_d, *output_d;
+    CUDA_CALL(cudaMalloc(&input_d, INPUT_SIZE * sizeof(double)));
+    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)));
+    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)));
+    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
+
+    int TILE_LEN = 512;
+    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(C, 3));
+    dim3 block(TILE_LEN, TILE_LEN, 3);
+    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d);
+    cudaDeviceSynchronize();
+
+    // copy back
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // finalizing
+    CUDA_CALL(cudaFree(output_d));
+    CUDA_CALL(cudaFree(filter_d));
+    CUDA_CALL(cudaFree(input_d));
+
+}
+
+//////////////////////////////////////////////////////
 void run_cudnn(double *input, double *filter, double *output) {
 
     cudnnHandle_t cudnn;
@@ -225,27 +279,26 @@ int main() {
     add_padding(input, input_padded);
     init_filter(filter);
 
-    double checksum = 0;
+    double checksum;
 
     // naive conv cpu mode
-    naive_convolution(input_padded, filter, output);
-    checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << std::endl;
+//    naive_convolution(input_padded, filter, output);
+//    checksum = calc_checksum(output, K, H, W);
+//    std::cout << checksum << std::endl;
 
     // cuda
+    clear_output(output);
+    run_cuda(input, filter, output);
+    checksum = calc_checksum(output, K, H, W);
+    std::cout << checksum << std::endl;
 
     // cuda tiled
 
     // cuDNN
     clear_output(output);
-    print_mat(input, C, H, W);
     run_cudnn(input, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
-    print_mat(output, K, H, W);
 
-
-//    print_mat(input, C, H, W);
-//    print_mat(input_padded, C, H0, W0);
     return 0;
 }
