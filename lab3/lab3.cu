@@ -188,14 +188,15 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice));
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice));
 
-    int TILE_LEN = 512;
-    int CHAN_LEN = 16;
+    int TILE_LEN = 8;
+    int CHAN_LEN = 4;
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
     dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FW, FH);
     cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess)
+    if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
+    }
     cudaDeviceSynchronize();
 
     // copy back
