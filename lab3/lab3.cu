@@ -166,7 +166,7 @@ __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
     int k = threadIdx.z + blockDim.z * blockIdx.z;
     double sum = 0;
 
-    if (k < K_d && x < H0_d && y < W0_d) {
+    if (k < K_d && x < H_d && y < W_d) {
         for (int c = 0; c < C_d; c++) {
             for (int j = 0; j < FH_d; j++) {
                 for (int i = 0; i < FW_d; i++) {
