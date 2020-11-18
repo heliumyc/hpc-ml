@@ -159,20 +159,12 @@ void naive_convolution(double *input, double *filter, double *output) {
 
 //////////////////////////////////////////////////////
 
-__global__ void naive_cuda_kernel(double *input, double *filter, double *output, const struct Configuration &configuration) {
+__global__ void naive_cuda_kernel(double *input, double *filter, double *output,
+                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FW_d, int FH_d) {
     int x = threadIdx.x + blockDim.x * blockIdx.x;
     int y = threadIdx.y + blockDim.y * blockIdx.y;
     int k = threadIdx.z + blockDim.z * blockIdx.z;
     double sum = 0;
-
-    int H0_d = configuration.H0;
-    int W0_d = configuration.W0;
-    int H_d = configuration.H;
-    int W_d = configuration.W;
-    int FH_d = configuration.FH;
-    int FW_d = configuration.FW;
-    int K_d = configuration.K;
-    int C_d = configuration.C;
 
     if (k < K_d && x < H0_d && y < W0_d) {
         for (int c = 0; c < C_d; c++) {
@@ -200,7 +192,7 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     int CHAN_LEN = 16;
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
     dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
-    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, {K, C, H, W, P, H0, W0, FW, FH});
+    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FW, FH);
     cudaDeviceSynchronize();
 
     // copy back
