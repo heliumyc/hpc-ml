@@ -146,7 +146,7 @@ void naive_convolution(double *input, double *filter, double *output) {
                 for (int c = 0; c < C; c++) {
                     for (int j = 0; j < FH; j++) {
                         for (int i = 0; i < FW; i++) {
-                            sum += at(filter, k, c, FW - 1 - i, FH - 1 - j, C, FW, FH) *
+                            sum += at(filter, k, c, FW - 1 - i, FH - 1 - j, C, FH, FW) *
                                    at(input, c, x + i, y + j, H0, W0);
                         }
                     }
@@ -160,27 +160,56 @@ void naive_convolution(double *input, double *filter, double *output) {
 //////////////////////////////////////////////////////
 
 __global__ void naive_cuda_kernel(double *input, double *filter, double *output,
-                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FW_d, int FH_d) {
+                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
     int x = threadIdx.x + blockDim.x * blockIdx.x;
     int y = threadIdx.y + blockDim.y * blockIdx.y;
     int k = threadIdx.z + blockDim.z * blockIdx.z;
     double sum = 0;
 
     if (k < K_d && x < H_d && y < W_d) {
-        int output_idx = k*H_d*W_d + x*W_d + y;
+//        int output_idx = k*H_d*W_d + x*W_d + y;
         for (int c = 0; c < C_d; c++) {
             for (int j = 0; j < FH_d; j++) {
                 for (int i = 0; i < FW_d; i++) {
 //                    int filter_idx = k*C_d*FH_d*FW_d + c*FH_d*FW_d + (FW_d-1-i)*FW_d + (FH_d-1-j);
 //                    int input_idx = c*H0_d*W0_d + (x+i)*W0_d + (y+j);
 //                    sum += filter[filter_idx] * input[input_idx];
-                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FW_d, FH_d) *
+                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FH_d, FW_d) *
                            at_d(input, c, x + i, y + j, H0_d, W0_d);
                 }
             }
         }
 //        output[output_idx] = sum;
         at_d(output, k, x, y, H_d, W_d) = sum;
+    }
+}
+
+__device__ double global_sum_gpu;
+
+__device__ double atomicAdd2(double* address, double val)
+{
+    auto* address_as_ull =
+            (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                                             __longlong_as_double(assumed)));
+
+        // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+    } while (assumed != old);
+
+    return __longlong_as_double(old);
+}
+
+__global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
+    int x = threadIdx.x + blockDim.x * blockIdx.x;
+    int y = threadIdx.y + blockDim.y * blockIdx.y;
+    int k = threadIdx.z + blockDim.z * blockIdx.z;
+    if (k < K_d && x < H_d && y < W_d) {
+        atomicAdd2(&global_sum_gpu, at_d(mat, k, x, y, H_d, W_d));
     }
 }
 
@@ -197,7 +226,16 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     int CHAN_LEN = 4;
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
     dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
-    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FW, FH);
+
+    // validate input, calc input checksum
+    double checksum = 0;
+    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
+    calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
+    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
+    std::cout << checksum << std::endl;
+
+    // naive kernel
+    naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
