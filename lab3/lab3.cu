@@ -200,7 +200,7 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     cudaDeviceSynchronize();
 
     // copy back
-    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy to host");
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
 
     // finalizing
     CUDA_CALL(cudaFree(output_d), "free");
