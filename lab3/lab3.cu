@@ -47,15 +47,13 @@ T &at(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
-__device__
-template<class T>
-T &at_d(T *tensor, int c, int i, int j, int height, int width) {
+__global__
+double &at_d(double *tensor, int c, int i, int j, int height, int width) {
     return tensor[c * height * width + i * width + j];
 }
 
-__device__
-template<class T>
-T &at_d(T *tensor, int k, int c, int i, int j, int layer, int height, int width) {
+__global__
+double &at_d(double *tensor, int k, int c, int i, int j, int layer, int height, int width) {
     return tensor[k * layer * height * width + c * height * width + i * width + j];
 }
 
