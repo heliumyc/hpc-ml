@@ -310,6 +310,7 @@ int main() {
     run_naive_cuda(input, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
+    print_mat(output, K, H, W);
 
     // cuda tiled
 
@@ -318,6 +319,7 @@ int main() {
     run_cudnn(input, filter, output);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << std::endl;
+    print_mat(output, K, H, W);
 
     return 0;
 }
