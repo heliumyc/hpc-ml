@@ -268,7 +268,7 @@ void run_naive_cuda(double *input, double *filter, double *output, double &time_
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
-    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
+    dim3 grid(ceil(H, TILE_LEN), ceil(W, TILE_LEN), ceil(K, TILE_LEN));
     dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
 
     // validate input, calc input checksum
@@ -308,7 +308,7 @@ void run_tiled_cuda(double *input, double *filter, double *output, double &time_
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
-    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
+    dim3 grid(ceil(H, TILE_LEN), ceil(W, TILE_LEN), ceil(K, TILE_LEN));
     dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
 
     struct timespec start, end;
