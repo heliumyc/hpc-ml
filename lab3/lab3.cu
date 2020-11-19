@@ -254,7 +254,7 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
             }
         }
         // load sum to output
-        at_d(output, k, x, y, H0_d, W0_d) = sum;
+        at_d(output, k, x, y, H_d, W_d) = sum;
     }
 }
 
