@@ -25,7 +25,7 @@
 
 const int H = 4, W = 4;
 //const int H = 1024, W = 1024;
-const int C = 3, FW = 3, FH = 3, K = 16;
+const int C = 3, FW = 3, FH = 3, K = 48;
 const int P = 1;
 const int H0 = H + 2 * P;
 const int W0 = W + 2 * P;
@@ -380,7 +380,6 @@ void run_cudnn(double *input, double *filter, double *output, double &time_elaps
     CUDNN_CALL(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, filter_descriptor, conv_descriptor, output_descriptor, algorithm, &ws_size));
     double *ws_data;
     CUDA_CALL(cudaMalloc(&ws_data, ws_size), "malloc workspace");
-
 
     // perform conv !!!!!!!!1
     double alpha = 1. , beta = 0.;
