@@ -5,6 +5,7 @@
 #include <cudnn.h>
 #include <time.h>
 #include <limits>
+#include <iomanip>
 
 #define CUDA_CALL(f, msg) { \
   cudaError_t err = (f); \
@@ -286,6 +287,7 @@ void run_naive_cuda(double *input, double *filter, double *output, double &time_
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
     clock_gettime(CLOCK_MONOTONIC, &end);
     time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
+    time_elapsed *= 1000;
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
@@ -318,7 +320,7 @@ void run_tiled_cuda(double *input, double *filter, double *output, double &time_
     tiled_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
     clock_gettime(CLOCK_MONOTONIC, &end);
     time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
-
+    time_elapsed *= 1000;
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
@@ -389,6 +391,7 @@ void run_cudnn(double *input, double *filter, double *output, double &time_elaps
                                        conv_descriptor, algorithm, ws_data, ws_size, &beta, output_descriptor, output_d));
     clock_gettime(CLOCK_MONOTONIC, &end);
     time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
+    time_elapsed *= 1000;
 
     // copy back
     CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
@@ -436,21 +439,24 @@ int main() {
     clear_output(output);
     run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
+    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuda tiled
     clear_output(output);
     run_tiled_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
+    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuDNN
     clear_output(output);
     run_cudnn(input, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
+    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     return 0;
