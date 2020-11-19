@@ -210,7 +210,7 @@ __global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
 
 #define TILE_LEN 8
 #define SMEM_LEN (TILE_LEN+2)
-__constant__ int filter_gpu[FILTER_SIZE];
+__constant__ double filter_gpu[FILTER_SIZE];
 __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
                                   int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
 
@@ -297,8 +297,10 @@ void run_naive_cuda(double *input, double *filter, double *output) {
 void run_tiled_cuda(double *input, double *filter, double *output) {
     double *input_d, *filter_d, *output_d;
     CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
+    CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
     CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)), "malloc output");
     CUDA_CALL(cudaMemcpy(input_d, input, INPUT_PADDED_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
+    CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
     CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)), "init const filter");
 
