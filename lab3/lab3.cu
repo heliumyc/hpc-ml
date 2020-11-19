@@ -313,6 +313,10 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
     double checksum = 0;
     CUDA_CALL(cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)), "checksum"); // load to gpu
     calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(err));
+    }
     CUDA_CALL(cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)), "checksum 2"); // load back to
     std::cout << checksum << std::endl;
     checksum = calc_checksum(filter, C, FH, FW);
