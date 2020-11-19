@@ -247,7 +247,7 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
     for (int c = 0; c < C_d; c++) {
         for (int j = 0; j < FH_d; j++) {
             for (int i = 0; i < FW_d; i++) {
-                sum += at(*filter_gpu, k, c, FW_d-1-i, FH_d-1-j) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
+                sum += at(filter_gpu, k, c, C, FW_d-1-i, FH_d-1-j) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
             }
         }
     }
