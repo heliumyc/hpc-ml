@@ -159,33 +159,6 @@ void naive_convolution(double *input, double *filter, double *output) {
 
 //////////////////////////////////////////////////////
 
-__global__ void naive_cuda_kernel(double *input, double *filter, double *output,
-                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
-    int x = threadIdx.x + blockDim.x * blockIdx.x;
-    int y = threadIdx.y + blockDim.y * blockIdx.y;
-    int k = threadIdx.z + blockDim.z * blockIdx.z;
-    double sum = 0;
-
-    if (k < K_d && x < H_d && y < W_d) {
-//        int output_idx = k*H_d*W_d + x*W_d + y;
-        for (int c = 0; c < C_d; c++) {
-            for (int j = 0; j < FH_d; j++) {
-                for (int i = 0; i < FW_d; i++) {
-//                    int filter_idx = k*C_d*FH_d*FW_d + c*FH_d*FW_d + (FW_d-1-i)*FW_d + (FH_d-1-j);
-//                    int input_idx = c*H0_d*W0_d + (x+i)*W0_d + (y+j);
-//                    sum += filter[filter_idx] * input[input_idx];
-                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FH_d, FW_d) *
-                           at_d(input, c, x + i, y + j, H0_d, W0_d);
-                }
-            }
-        }
-//        output[output_idx] = sum;
-        at_d(output, k, x, y, H_d, W_d) = sum;
-    }
-}
-
-__device__ double global_sum_gpu;
-
 __device__ double atomicAdd2(double* address, double val)
 {
     auto* address_as_ull =
@@ -204,6 +177,28 @@ __device__ double atomicAdd2(double* address, double val)
     return __longlong_as_double(old);
 }
 
+__global__ void naive_cuda_kernel(double *input, double *filter, double *output,
+                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
+    int x = threadIdx.x + blockDim.x * blockIdx.x;
+    int y = threadIdx.y + blockDim.y * blockIdx.y;
+    int k = threadIdx.z + blockDim.z * blockIdx.z;
+    double sum = 0;
+
+    if (k < K_d && x < H_d && y < W_d) {
+        for (int c = 0; c < C_d; c++) {
+            for (int j = 0; j < FH_d; j++) {
+                for (int i = 0; i < FW_d; i++) {
+                    sum += at_d(filter, k, c, FW_d - 1 - i, FH_d - 1 - j, C_d, FH_d, FW_d) *
+                           at_d(input, c, x + i, y + j, H0_d, W0_d);
+                }
+            }
+        }
+        at_d(output, k, x, y, H_d, W_d) = sum;
+    }
+}
+
+__device__ double global_sum_gpu;
+
 __global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
     int x = threadIdx.x + blockDim.x * blockIdx.x;
     int y = threadIdx.y + blockDim.y * blockIdx.y;
@@ -213,6 +208,13 @@ __global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
     }
 }
 
+__constant__ int filter_gpu[FILTER_SIZE];
+__global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
+                                  int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
+
+}
+
+////////////////////////////////////
 void run_naive_cuda(double *input, double *filter, double *output) {
     double *input_d, *filter_d, *output_d;
     CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
@@ -228,17 +230,11 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
 
     // validate input, calc input checksum
-    double checksum = 0;
-    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
-    calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
-    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
-    std::cout << checksum << std::endl;
-
-//    ////////////
-//    auto *temp = (double *) malloc(sizeof(double) * INPUT_SIZE);
-//    CUDA_CALL(cudaMemcpy(output, input_d, INPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
-//    ////////////
-
+//    double checksum = 0;
+//    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
+//    calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
+//    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
+//    std::cout << checksum << std::endl;
 
     // naive kernel
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
@@ -256,7 +252,10 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaFree(input_d), "free");
 
 }
-
+//////////////////////////////////////////////////////
+void run_tiled_cuda(double *input, double *filter, double *output) {
+    CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)));
+}
 //////////////////////////////////////////////////////
 void run_cudnn(double *input, double *filter, double *output) {
 
@@ -362,6 +361,8 @@ int main() {
     print_mat(output, K, H, W);
 
     // cuda tiled
+    clear_output(output);
+    run_tiled_cuda(input_padded, filter, output);
 
     // cuDNN
     clear_output(output);
