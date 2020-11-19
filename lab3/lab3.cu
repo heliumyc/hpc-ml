@@ -302,7 +302,7 @@ void run_naive_cuda(double *input, double *filter, double *output, double &time_
 
 }
 //////////////////////////////////////////////////////
-void run_tiled_cuda(double *input, double *filter, double *output) {
+void run_tiled_cuda(double *input, double *filter, double *output, double &time_elapsed) {
     double *input_d, *filter_d, *output_d;
     CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
     CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
@@ -331,8 +331,12 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
 //    checksum = calc_checksum(filter, C, FH, FW);
 //    std::cout << checksum << std::endl;
 
-
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     tiled_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
@@ -347,7 +351,7 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaFree(input_d), "free");
 }
 //////////////////////////////////////////////////////
-void run_cudnn(double *input, double *filter, double *output) {
+void run_cudnn(double *input, double *filter, double *output, double &time_elapsed) {
 
     cudnnHandle_t cudnn;
     CUDNN_CALL(cudnnCreate(&cudnn));
@@ -398,8 +402,12 @@ void run_cudnn(double *input, double *filter, double *output) {
 
     // perform conv !!!!!!!!1
     double alpha = 1. , beta = 0.;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     CUDNN_CALL(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, input_d, filter_descriptor, filter_d,
                                        conv_descriptor, algorithm, ws_data, ws_size, &beta, output_descriptor, output_d));
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
 
     // copy back
     CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
@@ -436,7 +444,7 @@ int main() {
     add_padding(input, input_padded);
     init_filter(filter);
 
-    double checksum, time;
+    double checksum, time = 0;
 
     // naive conv cpu mode
 //    naive_convolution(input_padded, filter, output);
@@ -448,21 +456,21 @@ int main() {
     run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
     std::cout << checksum << ", " << time << "s" << std::endl;
-    print_mat(output, K, H, W);
+//    print_mat(output, K, H, W);
 
     // cuda tiled
     clear_output(output);
-    run_tiled_cuda(input_padded, filter, output);
+    run_tiled_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << std::endl;
-    print_mat(output, K, H, W);
+    std::cout << checksum << ", " << time << "s" << std::endl;
+//    print_mat(output, K, H, W);
 
     // cuDNN
     clear_output(output);
-    run_cudnn(input, filter, output);
+    run_cudnn(input, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << std::endl;
-    print_mat(output, K, H, W);
+    std::cout << checksum << ", " << time << "s" << std::endl;
+//    print_mat(output, K, H, W);
 
     return 0;
 }
