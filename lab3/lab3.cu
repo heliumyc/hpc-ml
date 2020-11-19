@@ -269,10 +269,8 @@ void run_naive_cuda(double *input, double *filter, double *output, double &time_
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
-    int tile_len = 8;
-    int chan_len = 4;
-    dim3 grid(ceil(H0, tile_len), ceil(W0, tile_len), ceil(K, tile_len));
-    dim3 block(tile_len, tile_len, chan_len);
+    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
+    dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
 
     // validate input, calc input checksum
 //    double checksum = 0;
