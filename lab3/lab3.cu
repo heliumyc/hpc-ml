@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <cuda.h>
 #include <cudnn.h>
+#include <time.h>
 
 #define CUDA_CALL(f, msg) { \
   cudaError_t err = (f); \
@@ -259,7 +260,7 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
 }
 
 ////////////////////////////////////
-void run_naive_cuda(double *input, double *filter, double *output) {
+void run_naive_cuda(double *input, double *filter, double *output, double &time_elapsed) {
     double *input_d, *filter_d, *output_d;
     CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
     CUDA_CALL(cudaMalloc(&filter_d, FILTER_SIZE * sizeof(double)), "malloc filter");
@@ -281,7 +282,11 @@ void run_naive_cuda(double *input, double *filter, double *output) {
 //    std::cout << checksum << std::endl;
 
     // naive kernel
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
