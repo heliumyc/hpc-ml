@@ -439,24 +439,27 @@ int main() {
     clear_output(output);
     run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
-    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
+    std::cout << std::fixed;
+    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuda tiled
     clear_output(output);
     run_tiled_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
-    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
+    std::cout << std::fixed;
+    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuDNN
     clear_output(output);
     run_cudnn(input, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << std::setprecision (std::numeric_limits<double>::max_digits10) << checksum << ", ";
-    std::cout << std::fixed << std::setprecision(3) << time << "s" << std::endl;
+    std::cout << std::fixed;
+    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
     return 0;
