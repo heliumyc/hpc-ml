@@ -208,10 +208,51 @@ __global__ void calc_checksum_kernel(double *mat, int K_d, int H_d, int W_d) {
     }
 }
 
+#define TILE_LEN 8
+#define SMEM_LEN (TILE_LEN+2)
 __constant__ int filter_gpu[FILTER_SIZE];
 __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
                                   int K_d, int C_d, int H_d, int W_d, int H0_d, int W0_d, int FH_d, int FW_d) {
 
+    int x = threadIdx.x + blockDim.x * blockIdx.x;
+    int y = threadIdx.y + blockDim.y * blockIdx.y;
+    int k = threadIdx.z + blockDim.z * blockIdx.z;
+    __shared__ double smem[SMEM_LEN][SMEM_LEN][SMEM_LEN];
+
+    // idx transformation
+    // load input into smem cache
+    if (threadIdx.z < C_d && x < H_d && y < W_d) {
+        smem[threadIdx.z][threadIdx.x][threadIdx.y] = at(input, threadIdx.z, x, y, H0_d, W0_d);
+        // extra reading
+        if (threadIdx.x == blockDim.x - 1 && thraedIdx.y == blockDim.y - 1) {
+            for (int i = 1; i < FW_d; i++) {
+                for (int j = 1; j < FH_d; j++) {
+                    smem[threadIdx.z][threadIdx.x+i][threadIdx.y+j] = at(input, threadIdx.z, x+i, y+j, H0_d, W0_d);
+                }
+            }
+        } else if (threadIdx.x == blockDim.x - 1) {
+            for (int i = 1; i < FW; i++) {
+                smem[threadIdx.z][threadIdx.x + i][threadIdx.y] = at(input, threadIdx.z, x+i, y, H0_d, W0_d);
+            }
+        } else if (threadIdx.y == blockDim.y - 1) {
+            for (int i = 1; i < FH; i++) {
+                smem[threadIdx.z][threadIdx.x][threadIdx.y + i] = at(input, threadIdx.z, x, y+i, H0_d, W0_d);
+            }
+        }
+    }
+    __syncthreads();
+
+    // calculate conv
+    double sum = 0.;
+    for (int c = 0; c < C_d; c++) {
+        for (int j = 0; j < FH_d; j++) {
+            for (int i = 0; i < FW_d; i++) {
+                sum += at(filter_gpu, k, c, FW_d-1-i, FH_d-1-j) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
+            }
+        }
+    }
+    // load sum to output
+    at(output, k, x, y, H0_d, W0_d) = sum;
 }
 
 ////////////////////////////////////
@@ -224,10 +265,10 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaMemcpy(filter_d, filter, FILTER_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy filter");
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
 
-    int TILE_LEN = 8;
-    int CHAN_LEN = 4;
-    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, CHAN_LEN));
-    dim3 block(TILE_LEN, TILE_LEN, CHAN_LEN);
+    int tile_len = 8;
+    int chan_len = 4;
+    dim3 grid(ceil(H0, tile_len), ceil(W0, tile_len), ceil(K, tile_len));
+    dim3 block(tile_len, tile_len, chan_len);
 
     // validate input, calc input checksum
 //    double checksum = 0;
@@ -254,7 +295,29 @@ void run_naive_cuda(double *input, double *filter, double *output) {
 }
 //////////////////////////////////////////////////////
 void run_tiled_cuda(double *input, double *filter, double *output) {
+    double *input_d, *filter_d, *output_d;
+    CUDA_CALL(cudaMalloc(&input_d, INPUT_PADDED_SIZE * sizeof(double)), "malloc input");
+    CUDA_CALL(cudaMalloc(&output_d, OUTPUT_SIZE * sizeof(double)), "malloc output");
+    CUDA_CALL(cudaMemcpy(input_d, input, INPUT_PADDED_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy input");
+    CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
     CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)), "init const filter");
+
+    dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
+    dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
+
+    tiled_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(err));
+    }
+
+    // copy back
+    CUDA_CALL(cudaMemcpy(output, output_d, OUTPUT_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
+
+    // finalizing
+    CUDA_CALL(cudaFree(output_d), "free");
+    CUDA_CALL(cudaFree(filter_d), "free");
+    CUDA_CALL(cudaFree(input_d), "free");
 }
 //////////////////////////////////////////////////////
 void run_cudnn(double *input, double *filter, double *output) {
@@ -363,6 +426,9 @@ int main() {
     // cuda tiled
     clear_output(output);
     run_tiled_cuda(input_padded, filter, output);
+    checksum = calc_checksum(output, K, H, W);
+    std::cout << checksum << std::endl;
+    print_mat(output, K, H, W);
 
     // cuDNN
     clear_output(output);
