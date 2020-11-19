@@ -4,6 +4,7 @@
 #include <cuda.h>
 #include <cudnn.h>
 #include <time.h>
+#include <limits>
 
 #define CUDA_CALL(f, msg) { \
   cudaError_t err = (f); \
@@ -436,21 +437,21 @@ int main() {
     clear_output(output);
     run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuda tiled
     clear_output(output);
     run_tiled_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     // cuDNN
     clear_output(output);
     run_cudnn(input, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << ", " << time << "s" << std::endl;
+    std::cout << std::setprecision (std::numeric_limits<double>::digits10 + 1) << checksum << ", " << time << "s" << std::endl;
 //    print_mat(output, K, H, W);
 
     return 0;
