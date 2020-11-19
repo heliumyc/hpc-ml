@@ -221,7 +221,7 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
 
     // idx transformation
     // load input into smem cache
-    if (threadIdx.z < C_d && x < H_d && y < W_d) {
+    if (threadIdx.z < C_d && x < H0_d && y < W0_d) {
         smem[threadIdx.z][threadIdx.x][threadIdx.y] = at_d(input, threadIdx.z, x, y, H0_d, W0_d);
         // extra reading
         if (threadIdx.x == blockDim.x - 1 && threadIdx.y == blockDim.y - 1) {
@@ -244,15 +244,18 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
 
     // calculate conv
     double sum = 0.;
-    for (int c = 0; c < C_d; c++) {
-        for (int j = 0; j < FH_d; j++) {
-            for (int i = 0; i < FW_d; i++) {
-                sum += at_d(filter_gpu, k, c, C_d, FW_d-1-i, FH_d-1-j) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
+    if (k < K_d && x < H_d && y < W_d) {
+        for (int c = 0; c < C_d; c++) {
+            for (int j = 0; j < FH_d; j++) {
+                for (int i = 0; i < FW_d; i++) {
+//                    sum += at_d(filter_gpu, k, c, C_d, FW_d-1-i, FH_d-1-j) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
+                    sum += at_d(filter_gpu, k, c, C_d, FW_d-1-i, FH_d-1-j) * at_d(input, c, x + i, y + j, H0_d, W0_d);
+                }
             }
         }
+        // load sum to output
+        at_d(output, k, x, y, H0_d, W0_d) = sum;
     }
-    // load sum to output
-    at_d(output, k, x, y, H0_d, W0_d) = sum;
 }
 
 ////////////////////////////////////
