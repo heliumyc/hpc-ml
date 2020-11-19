@@ -248,8 +248,8 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
         for (int c = 0; c < C_d; c++) {
             for (int j = 0; j < FH_d; j++) {
                 for (int i = 0; i < FW_d; i++) {
-//                    sum += at_d(filter_gpu, k, c, FW_d-1-i, FH_d-1-j, C_d, FH_d, FW_d) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
-                    sum += at_d(filter_gpu, k, c, FW_d-1-i, FH_d-1-j, C_d, FH_d, FW_d) * at_d(input, c, x + i, y + j, H0_d, W0_d);
+                    sum += at_d(filter, k, c, FW_d-1-i, FH_d-1-j, C_d, FH_d, FW_d) * smem[c][x+i-blockDim.x * blockIdx.x][y+j-blockDim.y * blockIdx.y];
+//                    sum += at_d(filter, k, c, FW_d-1-i, FH_d-1-j, C_d, FH_d, FW_d) * at_d(input, c, x + i, y + j, H0_d, W0_d);
                 }
             }
         }
@@ -314,17 +314,17 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaMemcpy(temp, filter_gpu, FILTER_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
     std::cout << calc_checksum(temp, C, FH, FW) << std::endl;
 
-    double checksum = 0;
-    CUDA_CALL(cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)), "checksum"); // load to gpu
-    calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
-//    cudaError_t err = cudaGetLastError();
-//    if (err != cudaSuccess) {
-//        printf("Error: %s\n", cudaGetErrorString(err));
-//    }
-    CUDA_CALL(cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)), "checksum 2"); // load back to
-    std::cout << checksum << std::endl;
-    checksum = calc_checksum(filter, C, FH, FW);
-    std::cout << checksum << std::endl;
+//    double checksum = 0;
+//    CUDA_CALL(cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)), "checksum"); // load to gpu
+//    calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
+////    cudaError_t err = cudaGetLastError();
+////    if (err != cudaSuccess) {
+////        printf("Error: %s\n", cudaGetErrorString(err));
+////    }
+//    CUDA_CALL(cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)), "checksum 2"); // load back to
+//    std::cout << checksum << std::endl;
+//    checksum = calc_checksum(filter, C, FH, FW);
+//    std::cout << checksum << std::endl;
 
 
     tiled_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
