@@ -440,7 +440,7 @@ int main() {
     run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
     std::cout << std::fixed;
-    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision (3) << checksum << ", ";
     std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
@@ -449,7 +449,7 @@ int main() {
     run_tiled_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
     std::cout << std::fixed;
-    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision (3) << checksum << ", ";
     std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
@@ -458,7 +458,7 @@ int main() {
     run_cudnn(input, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
     std::cout << std::fixed;
-    std::cout << std::setprecision (2) << checksum << ", ";
+    std::cout << std::setprecision (3) << checksum << ", ";
     std::cout << std::setprecision(3) << time << "ms" << std::endl;
 //    print_mat(output, K, H, W);
 
