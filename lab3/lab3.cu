@@ -286,7 +286,7 @@ void run_naive_cuda(double *input, double *filter, double *output, double &time_
     clock_gettime(CLOCK_MONOTONIC, &start);
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9
+    time_elapsed = (double) (end.tv_sec - start.tv_sec) + (double) (end.tv_nsec - start.tv_nsec) * 1e-9;
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err));
@@ -436,7 +436,7 @@ int main() {
     add_padding(input, input_padded);
     init_filter(filter);
 
-    double checksum;
+    double checksum, time;
 
     // naive conv cpu mode
 //    naive_convolution(input_padded, filter, output);
@@ -445,9 +445,9 @@ int main() {
 
     // cuda
     clear_output(output);
-    run_naive_cuda(input_padded, filter, output);
+    run_naive_cuda(input_padded, filter, output, time);
     checksum = calc_checksum(output, K, H, W);
-    std::cout << checksum << std::endl;
+    std::cout << checksum << ", " << time << "s" << std::endl;
     print_mat(output, K, H, W);
 
     // cuda tiled
