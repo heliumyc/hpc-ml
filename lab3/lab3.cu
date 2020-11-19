@@ -254,7 +254,7 @@ void run_naive_cuda(double *input, double *filter, double *output) {
 }
 //////////////////////////////////////////////////////
 void run_tiled_cuda(double *input, double *filter, double *output) {
-    CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)));
+    CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)), "init const filter");
 }
 //////////////////////////////////////////////////////
 void run_cudnn(double *input, double *filter, double *output) {
