@@ -23,7 +23,7 @@
   } \
 }
 
-const int H = 4, W = 4;
+const int H = 256, W = 256;
 //const int H = 1024, W = 1024;
 const int C = 3, FW = 3, FH = 3, K = 64;
 const int P = 1;
