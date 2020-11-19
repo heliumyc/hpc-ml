@@ -221,7 +221,7 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
 
     // idx transformation
     // load input into smem cache
-    if (threadIdx.z < C_d && x < H0_d && y < W0_d) {
+    if (threadIdx.z < C_d && x < H_d && y < W_d) {
         smem[threadIdx.z][threadIdx.x][threadIdx.y] = at_d(input, threadIdx.z, x, y, H0_d, W0_d);
         // extra reading
         if (threadIdx.x == blockDim.x - 1 && threadIdx.y == blockDim.y - 1) {
