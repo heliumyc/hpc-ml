@@ -23,8 +23,8 @@
   } \
 }
 
-//const int H = 4, W = 4;
-const int H = 1024, W = 1024;
+const int H = 4, W = 4;
+//const int H = 1024, W = 1024;
 const int C = 3, FW = 3, FH = 3, K = 64;
 const int P = 1;
 const int H0 = H + 2 * P;
