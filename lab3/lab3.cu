@@ -230,11 +230,13 @@ __global__ void tiled_cuda_kernel(double *input, double *filter, double *output,
                     smem[threadIdx.z][threadIdx.x+i][threadIdx.y+j] = at_d(input, threadIdx.z, x+i, y+j, H0_d, W0_d);
                 }
             }
-        } else if (threadIdx.x == blockDim.x - 1) {
+        }
+        if (threadIdx.x == blockDim.x - 1) {
             for (int i = 1; i < FW_d; i++) {
                 smem[threadIdx.z][threadIdx.x + i][threadIdx.y] = at_d(input, threadIdx.z, x+i, y, H0_d, W0_d);
             }
-        } else if (threadIdx.y == blockDim.y - 1) {
+        }
+        if (threadIdx.y == blockDim.y - 1) {
             for (int i = 1; i < FH_d; i++) {
                 smem[threadIdx.z][threadIdx.x][threadIdx.y + i] = at_d(input, threadIdx.z, x, y+i, H0_d, W0_d);
             }
