@@ -311,9 +311,9 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
     dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
 
     double checksum = 0;
-    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
+    CUDA_CALL(cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)), "checksum"); // load to gpu
     calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
-    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
+    CUDA_CALL(cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)), "checksum 2"); // load back to
     std::cout << checksum << std::endl;
     checksum = calc_checksum(filter, C, FH, FW);
     std::cout << checksum << std::endl;
