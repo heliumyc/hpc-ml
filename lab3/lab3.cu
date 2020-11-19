@@ -274,11 +274,14 @@ void run_naive_cuda(double *input, double *filter, double *output) {
     dim3 block(tile_len, tile_len, chan_len);
 
     // validate input, calc input checksum
-    double checksum = 0;
-    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
-    calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
-    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
-    std::cout << checksum << std::endl;
+    double *temp = (double *) malloc(sizeof(double) * FILTER_SIZE);
+    CUDA_CALL(cudaMemcpy(temp, filter_gpu, FILTER_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
+    std::cout << calc_checksum(temp, C, FH, FW) << std::endl;
+//    double checksum = 0;
+//    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
+//    calc_checksum_kernel<<<grid, block>>>(input_d, C, H0, W0);
+//    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
+//    std::cout << checksum << std::endl;
 
     // naive kernel
     naive_cuda_kernel<<<grid, block>>>(input_d, filter_d, output_d, K, C, H, W, H0, W0, FH, FW);
