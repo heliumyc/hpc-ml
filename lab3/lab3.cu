@@ -307,6 +307,14 @@ void run_tiled_cuda(double *input, double *filter, double *output) {
     CUDA_CALL(cudaMemcpy(output_d, output, OUTPUT_SIZE * sizeof(double), cudaMemcpyHostToDevice), "copy output");
     CUDA_CALL(cudaMemcpyToSymbol(filter_gpu, filter, FILTER_SIZE*sizeof(int)), "init const filter");
 
+    double checksum = 0;
+    cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)); // load to gpu
+    calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
+    cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)); // load back to
+    std::cout << checksum << std::endl;
+    checksum = calc_checksum(filter, C, FH, FW);
+    std::cout << checksum << std::endl;
+
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
     dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
 
