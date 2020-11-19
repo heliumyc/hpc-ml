@@ -23,9 +23,9 @@
   } \
 }
 
-const int H = 4, W = 4;
-//const int H = 1024, W = 1024;
-const int C = 3, FW = 3, FH = 3, K = 1;
+//const int H = 4, W = 4;
+const int H = 1024, W = 1024;
+const int C = 3, FW = 3, FH = 3, K = 64;
 const int P = 1;
 const int H0 = H + 2 * P;
 const int W0 = W + 2 * P;
@@ -314,22 +314,6 @@ void run_tiled_cuda(double *input, double *filter, double *output, double &time_
 
     dim3 grid(ceil(H0, TILE_LEN), ceil(W0, TILE_LEN), ceil(K, TILE_LEN));
     dim3 block(TILE_LEN, TILE_LEN, TILE_LEN);
-
-//    double *temp = (double *) malloc(sizeof(double) * FILTER_SIZE);
-//    CUDA_CALL(cudaMemcpy(temp, filter_gpu, FILTER_SIZE * sizeof(double), cudaMemcpyDeviceToHost), "copy output to host");
-//    std::cout << calc_checksum(temp, C, FH, FW) << std::endl;
-
-//    double checksum = 0;
-//    CUDA_CALL(cudaMemcpyToSymbol(global_sum_gpu, &checksum, sizeof(double)), "checksum"); // load to gpu
-//    calc_checksum_kernel<<<grid, block>>>(filter_gpu, C, FH, FW);
-////    cudaError_t err = cudaGetLastError();
-////    if (err != cudaSuccess) {
-////        printf("Error: %s\n", cudaGetErrorString(err));
-////    }
-//    CUDA_CALL(cudaMemcpyFromSymbol(&checksum, global_sum_gpu, sizeof(double)), "checksum 2"); // load back to
-//    std::cout << checksum << std::endl;
-//    checksum = calc_checksum(filter, C, FH, FW);
-//    std::cout << checksum << std::endl;
 
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
