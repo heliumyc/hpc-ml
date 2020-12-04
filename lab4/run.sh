@@ -7,6 +7,7 @@
 #SBATCH --job-name=hml-lab1
 #SBATCH --output=lab4.out
 #SBATCH --gres=gpu:k80:4
+#SBATCH --reservation=chung
 
 module purge
 module load python3/intel/3.7.3
