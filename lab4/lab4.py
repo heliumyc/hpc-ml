@@ -17,8 +17,8 @@ def main():
     # argument parser
     parser = argparse.ArgumentParser(description='cifar10 res18')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--workers', default=2, type=int, help='data loader workers number')
-    parser.add_argument('--epoch', default=5, type=int, help='epoch to run')
+    parser.add_argument('--workers', default=4, type=int, help='data loader workers number')
+    parser.add_argument('--epoch', default=2, type=int, help='epoch to run')
     parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--gpu_count', default=1, type=int, help='gpu number to use')
     parser.add_argument('--data', default='./data', type=str, help='data path')
