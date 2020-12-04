@@ -40,3 +40,8 @@ echo "  batch size 512 with 4 gpu:\n"
 python3 lab4.py --epoch 2 --gpu --gpu_count 4 --batch_size 512 --workers 4 --disable_batch_norm
 echo "  batch size 2048 with 4 gpu:\n"
 python3 lab4.py --epoch 2 --gpu --gpu_count 4 --batch_size 2048 --workers 4 --disable_batch_norm
+
+
+echo "##################\n"
+echo "finish\n"
+echo "##################\n"

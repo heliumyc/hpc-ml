@@ -16,3 +16,7 @@ echo "  batch size 32:\n"
 python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 32 --workers 4 --disable_batch_norm
 echo "  batch size 128:\n"
 python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 128 --workers 4 --disable_batch_norm
+
+echo "##################\n"
+echo "finish\n"
+echo "##################\n"
