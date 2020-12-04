@@ -38,6 +38,11 @@ def main():
 
     gpu_count = min(torch.cuda.device_count(), args.gpu_count)
 
+    ## multiple gpu batch size should be multiplied by number
+    if device == 'gpu':
+        assert(gpu_count > 0)
+        batch_size = batch_size * gpu_count
+
     # transformer
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4), # size of 32*32, padding 4 px
