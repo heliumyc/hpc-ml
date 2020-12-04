@@ -3,7 +3,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --time=5:00:00
-#SBATCH --mem=4GB
+#SBATCH --mem=200GB
 #SBATCH --job-name=hml-lab1
 #SBATCH --output=lab4.out
 #SBATCH --gres=gpu:k80:4
