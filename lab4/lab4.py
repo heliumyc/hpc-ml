@@ -83,7 +83,7 @@ def main():
     best_acc = 0  # best test accuracy
     
     def train(epoch):
-        print('\nEpoch: %d' % epoch)
+        # print('\nEpoch: %d' % epoch)
         net.train()
         train_loss = 0
         correct = 0
