@@ -73,6 +73,7 @@ def main():
             # use parallel
             device_list = list(range(0, gpu_count))
             net = torch.nn.DataParallel(net, device_ids=device_list)
+            cudnn.benchmark = True
     criterion = nn.CrossEntropyLoss()
 
     if args.optimizer == 'sgd' :
