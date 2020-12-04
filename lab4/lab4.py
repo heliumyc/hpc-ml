@@ -99,14 +99,16 @@ def main():
         data_load_time = 0
         train_time = 0
         
+        epoch_tic = time.perf_counter()
         for batch_idx, (inputs, targets) in enumerate(trainloader):
-            tic = time.perf_counter()
+            train_tic = time.perf_counter()
+
+            data_load_tic = time.perf_counter()
             inputs, targets = inputs.to(device), targets.to(device)
+            data_load_time += time.perf_counter() - data_load_tic
 
             optimizer.zero_grad()
-            data_load_time += time.perf_counter() - tic
             outputs = net(inputs)
-
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
@@ -116,9 +118,11 @@ def main():
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            train_time += time.perf_counter() - tic
+            train_time += time.perf_counter() - train_tic
             # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
+        epoch_time = time.perf_counter() - epoch_tic
+        print('Epoch %d: | Training time: %.3f | Epoch running time: %.3f' %(epoch, train_time, epoch_time))
         return data_load_time, train_time
 
     def test(epoch):
@@ -154,7 +158,6 @@ def main():
         train_data_load_time, train_time = train(epoch)
         epoch_time = time.perf_counter() - total_tic
 
-        print('Epoch %d: | Training time: %.3f | Epoch running time: %.3f' %(epoch, train_time, epoch_time))
 
         # total_data_load_time += data_load_time
         total_train_time += train_time

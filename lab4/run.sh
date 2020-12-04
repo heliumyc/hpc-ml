@@ -12,8 +12,8 @@ module purge
 module load python3/intel/3.7.3
 pip3 install --user torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
-echo "  batch size 128 with 2 gpu:\n"
-python3 lab4.py --epoch 2 --gpu --gpu_count 2 --batch_size 128 --workers 4 --disable_batch_norm
+echo "  batch size 128:\n"
+python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 512 --workers 4 --disable_batch_norm
 
 echo "##################\n"
 echo "finish\n"
