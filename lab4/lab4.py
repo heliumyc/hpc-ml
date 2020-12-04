@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
+from torch.autograd import Variable
 
 import torchvision
 import torchvision.transforms as transforms
@@ -44,6 +45,7 @@ def main():
         batch_size = batch_size * gpu_count
     print("gpu number to use %d" %(gpu_count))
     print("total batch size is %d" %batch_size)
+    use_gpu = device == 'gpu'
 
     # transformer
     transform_train = transforms.Compose([
@@ -104,12 +106,19 @@ def main():
             train_tic = time.perf_counter()
 
             data_load_tic = time.perf_counter()
-            inputs, targets = inputs.to(device), targets.to(device)
+            # inputs, targets = inputs.to(device), targets.to(device)
+            inputs, targets = Variable(inputs), Variable(targets)
             data_load_time += time.perf_counter() - data_load_tic
+
+            if use_gpu:
+                inputs = inputs.cuda()
+                outputs = outputs.cuda()
 
             optimizer.zero_grad()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
+            if use_gpu:
+                loss = loss.cuda()
             loss.backward()
             optimizer.step()
 
