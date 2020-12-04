@@ -96,7 +96,6 @@ def main():
             tic = time.perf_counter()
             inputs, targets = inputs.to(device), targets.to(device)
 
-            tic = time.perf_counter()
             optimizer.zero_grad()
             data_load_time += time.perf_counter() - tic
             outputs = net(inputs)
