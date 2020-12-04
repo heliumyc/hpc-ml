@@ -36,7 +36,7 @@ def main():
     batch_size = args.batch_size
     lr = args.lr
 
-    gpu_count = min(torch.cuda.device_count(), gpu_count)
+    gpu_count = min(torch.cuda.device_count(), args.gpu_count)
 
     # transformer
     transform_train = transforms.Compose([
