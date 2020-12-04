@@ -110,12 +110,13 @@ def main():
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
-            train_time += time.perf_counter() - tic
 
             train_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+
+            train_time += time.perf_counter() - tic
             # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
         return data_load_time, train_time
