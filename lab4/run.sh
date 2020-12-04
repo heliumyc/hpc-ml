@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH --time=5:00:00
 #SBATCH --mem=4GB
 #SBATCH --job-name=hml-lab1
@@ -14,10 +14,10 @@ pip3 install --user torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://downl
 
 echo "Q1:\n"
 
-python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 16 --workers 8 --disable_batch_norm
-python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 32 --workers 8 --disable_batch_norm
-python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 64 --workers 8 --disable_batch_norm
-python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 128 --workers 8 --disable_batch_norm
+python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 16 --workers 4 --disable_batch_norm
+python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 32 --workers 4 --disable_batch_norm
+python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 64 --workers 4 --disable_batch_norm
+python3 lab4.py --epoch 2 --gpu --gpu_count 1 --batch_size 128 --workers 4 --disable_batch_norm
 
 
 echo "##################\n"
