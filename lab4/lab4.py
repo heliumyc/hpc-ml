@@ -44,7 +44,6 @@ def main():
         assert(gpu_count > 0)
         batch_size = batch_size * gpu_count
     use_gpu = device == 'gpu'
-    print(use_gpu)
     print("gpu number to use %d" %(gpu_count))
     print("total batch size is %d" %batch_size)
 
@@ -113,7 +112,7 @@ def main():
 
             if use_gpu:
                 inputs = inputs.cuda()
-                outputs = outputs.cuda()
+                targets = targets.cuda()
 
             optimizer.zero_grad()
             outputs = net(inputs)
