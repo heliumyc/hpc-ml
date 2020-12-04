@@ -37,12 +37,13 @@ def main():
     lr = args.lr
 
     gpu_count = min(torch.cuda.device_count(), args.gpu_count)
-    print("gpu number to use %d" %(gpu_count))
 
     ## multiple gpu batch size should be multiplied by number
     if device == 'gpu':
         assert(gpu_count > 0)
         batch_size = batch_size * gpu_count
+    print("gpu number to use %d" %(gpu_count))
+    print("total batch size is %d" %batch_size)
 
     # transformer
     transform_train = transforms.Compose([
