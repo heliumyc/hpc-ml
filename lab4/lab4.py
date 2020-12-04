@@ -69,11 +69,11 @@ def main():
     net = ResNet(BasicBlock, [2, 2, 2, 2], use_bn=(not args.disable_batch_norm)) # res18
     if device == 'cuda':
         net = net.cuda()
-        if gpu_count > 1:
+        # if gpu_count > 1:
             # use parallel
-            device_list = list(range(0, gpu_count))
-            net = torch.nn.DataParallel(net, device_ids=device_list)
-            cudnn.benchmark = True
+        device_list = list(range(0, gpu_count))
+        net = torch.nn.DataParallel(net, device_ids=device_list)
+        cudnn.benchmark = True
     criterion = nn.CrossEntropyLoss()
 
     if args.optimizer == 'sgd' :

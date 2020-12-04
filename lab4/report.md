@@ -29,14 +29,12 @@ The reason for this, I believe, is that when batch size is small, GPU units are 
 
 # Q2
 
-
-
 |       | Batch size | 32 / gpu | Batch size | 128 / gpu | Batch size | 512 / gpu |
 | ----- | ---------- | -------- | ---------- | --------- | ---------- | --------- |
 |       | Time       | Speedup  | Time       | Speedup   | Time       | Speedup   |
 | 1 GPU | 164.678    | 1        | 162.897    | 1         | 170.885    | 1         |
-| 2 GPU |            |          |            |           |            |           |
-| 4 GPU |            |          |            |           |            |           |
+| 2 GPU | 90.064     | 1.828    | 50.828     | 3.204     | 38.528     | 4.435     |
+| 4 GPU | 92.328     | 1.784    | 36.478     | 4.466     | 24.060     | 7.102     |
 
 
 
