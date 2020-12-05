@@ -120,8 +120,8 @@ def main():
             correct += predicted.eq(targets).sum().item()
 
             train_time += time.perf_counter() - train_tic
-            # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
+        print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         epoch_time = time.perf_counter() - epoch_tic
         print('Epoch %d: | Training time: %.3f | Epoch running time: %.3f' %(epoch, train_time, epoch_time))
         return data_load_time, train_time

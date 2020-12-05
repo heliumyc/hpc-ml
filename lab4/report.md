@@ -2,28 +2,11 @@
 
 On **K80** GPU, w/o data loading, it takes
 
-| Batch size           | 32      | 128     | 512     |
-| -------------------- | ------- | ------- | ------- |
-| **Train** Time (sec) | 162.399 | 161.786 | 170.099 |
+| Batch size           | 32     | 128    | 512    |
+| -------------------- | ------ | ------ | ------ |
+| **Train** Time (sec) | 96.315 | 70.056 | 63.323 |
 
-
-
-In fact, I think 4 fold (32,128,512) parameter range does not reveal too much, so I tested with smaller granularity.
-
-| Batch size | Time(s) |
-| ---------- | ------- |
-| 16         | 494.993 |
-| 32         | 162.399 |
-| 64         | 84.342  |
-| 128        | 161.786 |
-| 256        | 177.793 |
-| 512        | 170.099 |
-
-
-
-We can find that when batch size is relatively small (say 16), larger batch size will boost training drastically until it reaches its best at 64. When it continues increasing, the time it takes bounces back. 
-
-The reason for this, I believe, is that when batch size is small, GPU units are not fully used and most are still idle so it takes longer to train all batches, thus increasing batch size will make fully use of GPU. But after reaching the optimal size, GPU might not able to deal with one batch at a time so scheduling could slow down the total time. Also, cache missing and bank conclict could contribute to slower running time.
+When batch size is larger, it takes shorter time to train, because large batch size means higher working volumn for single GPU and less CPU-GPU transfer times, so we can make fully use of GPU.
 
 
 
@@ -32,9 +15,15 @@ The reason for this, I believe, is that when batch size is small, GPU units are 
 |       | Batch size | 32 / gpu | Batch size | 128 / gpu | Batch size | 512 / gpu |
 | ----- | ---------- | -------- | ---------- | --------- | ---------- | --------- |
 |       | Time       | Speedup  | Time       | Speedup   | Time       | Speedup   |
-| 1 GPU | 164.678    | 1        | 162.897    | 1         | 170.885    | 1         |
-| 2 GPU | 90.064     | 1.828    | 50.828     | 3.204     | 38.528     | 4.435     |
-| 4 GPU | 92.328     | 1.784    | 36.478     | 4.466     | 24.060     | 7.102     |
+| 1 GPU | 98.611     | 1        | 71.038     | 1         | 64.194     | 1         |
+| 2 GPU | 90.064     | 1.09     | 50.828     | 1.40      | 38.528     | 1.67      |
+| 4 GPU | 90.334     | 1.09     | 35.331     | 2.01      | 24.339     | 2.64      |
+
+
+
+We are measuring weak scaling because workload (batch size) for each processor (GPU) stays constant. 
+
+Strong scaling speed up is obviously worse than weak scaling with fixed batch size. In strong scaling, 1 gpu with 128 batch size is scaled into 4 gpu with 32 batch size. From the datapoint above, **71.038 < 90.334**, so weak scaling is better. The reason lies in that for strong scaling we must spend more time on communication with small batch size.
 
 
 
@@ -44,18 +33,32 @@ The reason for this, I believe, is that when batch size is small, GPU units are 
 
 
 
-|       | Batch size | 32   | Batch size | 128  | Batch size | 512  |
-| ----- | ---------- | ---- | ---------- | ---- | ---------- | ---- |
-|       | Compute    | Comm | Compute    | Comm | Compute    | Comm |
-| 2-GPU |            |      |            |      |            |      |
-| 4-GPU |            |      |            |      |            |      |
+|       | Batch size | 32       | Batch size | 128    | Batch size | 512   |
+| ----- | ---------- | -------- | ---------- | ------ | ---------- | ----- |
+|       | Compute    | Comm     | Compute    | Comm   | Compute    | Comm  |
+| 2-GPU | 48.1575    | 41.906   | 35.028     | 15.800 | 31.6615    | 6.86  |
+| 4-GPU | 24.07875   | 66.25525 | 17.514     | 17.817 | 15.83075   | 8.508 |
+
+Based on assumtion that computation intensity for single GPU is the same as in multiple GPUs mode.
+
+For $$n$$ GPU,
+
+Computation time for n GPU = Computation time for 1 GPU / n
+
+Communication for n GPU = Total time for n GPU - Computation time for n GPU
+
+​											    =  Total time for n GPU  - (Computation time for 1 GPU / n)
 
 
 
+## Q3.2
 
+From paper **"Bandwidth optimal all-reduce algorithms for clusters of workstations"** we have formula:
 
+$$Data\ bytes\ to\ move = 2 \times (N-1) \times \frac{X}{N} \times itsize$$ 
 
+Where it size is float32, i.e. 4 bytes, X is parameters, i.e. 11173962, N is the gpu number
 
-data point
+in total, 
 
-1 gpu 2048 = 121.080
+Bandwith = $$ \frac{N-1}{N} \times  $$
